@@ -21,7 +21,7 @@ Token* Lexer::GetToken()
 
 	bool file_reading = false;
 
-	ifstream file(Lexer::PATH); 
+	ifstream file(PATH); 
 	char sim;	
 
 	if(current_file_pos != 0)
@@ -159,6 +159,18 @@ Token* Lexer::GetToken()
 		}
 		else {
 			lexem += sim;
+
+			streampos old_pos = file.tellg();
+
+			if (!file.get(sim)) {
+				tmp = DefineTokenType(lexem);
+				current_file_pos = file.tellg();
+				break;
+			}
+			else {
+				file.seekg(old_pos);
+			}
+
 			current_file_pos = file.tellg();
 		}
 
@@ -199,13 +211,13 @@ Token* Lexer::DefineTokenType(string lexem)
 		//cout << " IDENTIFICATOR" << endl;
 	}
 	else if ((lexem == "=") || (lexem == "<") || (lexem == ">") ||
-		(lexem == ">=") || (lexem == "<=") || (lexem == "not") || (lexem == "<>")) {
+		(lexem == ">=") || (lexem == "<=") || (to_lower(lexem) == "not") || (lexem == "<>")) {
 		token->type = LogicalOperator;
 
 		//cout << " LogicalOperator" << endl;
 	}
 	else if ((lexem == "+") || (lexem == "-") || (lexem == "*") ||
-		(lexem == "/") || (lexem == "mod") || (lexem == "div")) {
+		(lexem == "/") || (to_lower(lexem) == "mod") || (to_lower(lexem) == "div")) {
 		token->type = AriphmethicalOperator;
 
 		//cout << " AriphmethicalOperator" << endl;
@@ -233,4 +245,11 @@ Token* Lexer::DefineTokenType(string lexem)
 
 	token->value = lexem;
 	return token;
+}
+
+Token::Token(){}
+
+Token::Token(string val)
+{
+	value = val;
 }

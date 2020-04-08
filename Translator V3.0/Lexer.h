@@ -28,6 +28,9 @@ class Token
 public:
 	TokenType type;
 	string value;
+
+	Token();
+	Token(string val);
 };
 
 class Lexer

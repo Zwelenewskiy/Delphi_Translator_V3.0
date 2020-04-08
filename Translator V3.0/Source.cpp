@@ -8,7 +8,7 @@
 #include <queue>
 #include <regex>
 #include "GlobalHelper.h"
-#include "Lexer.h"
+#include "Parser.h"
 
 using namespace std;
 
@@ -16,19 +16,14 @@ string const PATH = "input.pas";
 
 int main()
 {
-	Lexer* lexer = new Lexer(PATH);
-	Token* token;
+	Parser* parser = new Parser();
+	parser->Parse(PATH);
 
-	while (true) {
-		token = lexer->GetToken();
-		if (token == nullptr)
-			break;
-
-		cout << token->value << endl;
-	}
+	if(parser->stmt())
+		cout << endl << "SYNTAX IS OK" << endl;
 
 	system("pause");
 
-	delete lexer;
+	delete parser;
 	return 0;
 }
