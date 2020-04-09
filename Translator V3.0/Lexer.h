@@ -13,14 +13,14 @@ using namespace std;
 
 enum TokenType
 {
-	Identificator,
-	KeyWord,
-	LogicalOperator,
-	AriphmethicalOperator,
-	Separator,
-	Literal,
-	Operator,
-	ErrorToken
+	Identificator,//0
+	KeyWord,//1
+	LogicalOperator,//2
+	AriphmethicalOperator,//3
+	Separator,//4
+	Literal,//5
+	Operator,//6
+	ErrorToken//7
 };
 
 class Token
