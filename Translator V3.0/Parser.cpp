@@ -204,13 +204,6 @@ bool Parser::stmt()
 		if (!stmt())
 			return false;
 	}
-	/*else if (current_token->value == "expr") {
-		if (!match(new Token("expr")))
-			return false;
-
-		if (!match(new Token(";")))
-			return false;
-	}*/
 	else  if (current_token->type == Identificator) {
 		if (!match(Identificator))
 			return false;
@@ -221,7 +214,13 @@ bool Parser::stmt()
 		if (!parse_ariphmethical_expr())
 			return false;
 
-		if (!match(new Token(";"))) 			
+		if(match(new Token("else"), false)){
+			if (!stmt())
+				return false;
+		}
+		else if (!match(new Token(";"))) 			
+			return false;
+		else if (!stmt())
 			return false;
 	}
 	else if (current_token->value == "while") {
