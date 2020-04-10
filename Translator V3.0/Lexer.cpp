@@ -101,6 +101,20 @@ Token* Lexer::GetToken()
 						break;
 					}
 				}
+				else if (lexem != "") {
+					tmp = DefineTokenType(lexem);
+
+					file.seekg(old_pos);
+					break;
+				}else if ((lexem == "") && (isalpha(sim) ||
+						(sim == ' ') || (sim == '\n') || (sim == '\t'))) {
+					tmp = new Token();
+					tmp->type = Separator;
+					tmp->value = ":";
+
+					current_file_pos = old_pos;
+					break;
+				}
 				else {
 					file.seekg(old_pos);
 				}
@@ -201,6 +215,12 @@ Token* Lexer::DefineTokenType(string lexem)
 		token->type = Operator;
 
 		//cout << " Operator" << endl;
+	}
+	else if ((to_lower(lexem) == "integer") || (to_lower(lexem) == "string") 
+		|| (to_lower(lexem) == "boolean") || (to_lower(lexem) == "char")) {
+		token->type = TypeData;
+
+		//cout << " TypeData" << endl;
 	}
 	else if ((to_lower(lexem) == "begin") || (to_lower(lexem) == "end") || (to_lower(lexem) == "if") ||
 		(to_lower(lexem) == "then") || (to_lower(lexem) == "else") || (to_lower(lexem) == "for") ||

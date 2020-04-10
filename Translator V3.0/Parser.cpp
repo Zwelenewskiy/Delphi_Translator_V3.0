@@ -7,6 +7,18 @@ void Parser::Parse(string path)
 	current_token = lexer->GetToken();
 
 	bool correct = true;
+
+	if (match(new Token("var"), false)) {
+		if (!parse_var()) {
+			correct = false;
+		}
+	}
+	else if (current_token->value != "begin") {
+		correct = false;
+	}
+
+	//current_token = new Token("var");
+
 	while ((current_token != nullptr) && correct) {
 		correct = stmt();
 	}
@@ -123,7 +135,6 @@ bool Parser::parse_ariphmethical_expr()
 bool Parser::parse_bool_expr()
 {
 	bracket_balance = 1;
-	Token* pred_token = current_token;
 	while (bracket_balance != 0) {
 		Token* pred_token = current_token;
 
@@ -155,6 +166,36 @@ bool Parser::parse_bool_expr()
 		else
 			return false;
 	}
+}
+
+bool Parser::parse_var()
+{
+	if (current_token->type != Identificator)
+		return false;
+
+	while (current_token->value != "begin")
+	{
+		if (current_token->type == Identificator) {
+			if (!match(Identificator))
+				return false;
+
+			if (!match(new Token(","), false)) {
+				if (match(new Token(":"))) {
+					if (match(TypeData)) {
+						if (!match(new Token(";"))) {
+							return false;
+						}
+						else
+							continue;
+					}
+				}
+				else
+					return false;
+			}			
+		}		
+	}
+
+	return true;
 }
 
 bool Parser::stmt()

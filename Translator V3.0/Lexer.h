@@ -20,7 +20,8 @@ enum TokenType
 	Separator,//4
 	Literal,//5
 	Operator,//6
-	ErrorToken//7
+	ErrorToken,//7
+	TypeData//8
 };
 
 class Token
