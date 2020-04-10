@@ -189,7 +189,15 @@ Token* Lexer::DefineTokenType(string lexem)
 	Token* token = new Token();
 
 	//cout << lexem;
-	if (lexem == ":=") {
+
+	if ((lexem == "=") || (lexem == "<") || (lexem == ">") ||
+		(lexem == ">=") || (lexem == "<=") || (to_lower(lexem) == "not") || (lexem == "<>")
+		|| (to_lower(lexem) == "or") || (to_lower(lexem) == "and")) {
+		token->type = LogicalOperator;
+
+		//cout << " LogicalOperator" << endl;
+	}
+	else if (lexem == ":=") {
 		token->type = Operator;
 
 		//cout << " Operator" << endl;
@@ -210,13 +218,7 @@ Token* Lexer::DefineTokenType(string lexem)
 
 		//cout << " IDENTIFICATOR" << endl;
 	}
-	else if ((lexem == "=") || (lexem == "<") || (lexem == ">") ||
-		(lexem == ">=") || (lexem == "<=") || (to_lower(lexem) == "not") || (lexem == "<>")) {
-		token->type = LogicalOperator;
-
-		//cout << " LogicalOperator" << endl;
-	}
-	else if ((lexem == "+") || (lexem == "-") || (lexem == "*") ||
+	else  if ((lexem == "+") || (lexem == "-") || (lexem == "*") ||
 		(lexem == "/") || (to_lower(lexem) == "mod") || (to_lower(lexem) == "div")) {
 		token->type = AriphmethicalOperator;
 

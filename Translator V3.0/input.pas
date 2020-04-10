@@ -1,8 +1,8 @@
 begin		
-	if(expr) then	
+	if(a and b) then	
 		while(expr) do
 			a:= b + 1;	
 		
-	id:= id + 4;
+	id:= id + 4; 
 	id:= id + 4;
 end.

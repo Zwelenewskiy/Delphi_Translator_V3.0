@@ -13,6 +13,8 @@ void Parser::Parse(string path)
 
 	if(correct)
 		cout << endl << "SYNTAX IS OK" << endl;
+	else
+		cout << endl << "SYNTAX ERROR" << endl;
 
 	/*Token* token; 
 	while (true) {
@@ -118,6 +120,43 @@ bool Parser::parse_ariphmethical_expr()
 	return true;
 }
 
+bool Parser::parse_bool_expr()
+{
+	bracket_balance = 1;
+	Token* pred_token = current_token;
+	while (bracket_balance != 0) {
+		Token* pred_token = current_token;
+
+		if (bracket_balance == 0) {
+			current_token = pred_token;
+			return true;
+		}
+
+		if (current_token->type == Identificator) {
+			if (!match(Identificator))
+				return false;
+
+			if (current_token->value == ")") {
+				bracket_balance--;
+
+				if (bracket_balance == 0)
+					return true;
+			}
+
+			if (!match(LogicalOperator, false))
+				return false;
+
+			if (current_token->value == "(")
+				bracket_balance++;
+
+			if (!parse_bool_expr())
+				return false;
+		}
+		else
+			return false;
+	}
+}
+
 bool Parser::stmt()
 {
 	if (current_token == nullptr) {
@@ -153,7 +192,7 @@ bool Parser::stmt()
 		if (!match(new Token("("))) 
 			return false;
 
-		if (!match(new Token("expr")))
+		if (!parse_bool_expr())
 			return false;
 
 		if (!match(new Token(")")))
@@ -165,13 +204,13 @@ bool Parser::stmt()
 		if (!stmt())
 			return false;
 	}
-	else if (current_token->value == "expr") {
+	/*else if (current_token->value == "expr") {
 		if (!match(new Token("expr")))
 			return false;
 
 		if (!match(new Token(";")))
 			return false;
-	}
+	}*/
 	else  if (current_token->type == Identificator) {
 		if (!match(Identificator))
 			return false;
@@ -192,7 +231,7 @@ bool Parser::stmt()
 		if (!match(new Token("(")))
 			return false;
 
-		if (!match(new Token("expr")))
+		if (!parse_bool_expr())
 			return false;
 
 		if (!match(new Token(")")))
