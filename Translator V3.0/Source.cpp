@@ -19,9 +19,6 @@ int main()
 	Parser* parser = new Parser();
 	parser->Parse(PATH);
 
-	//if(parser->stmt())
-		//cout << endl << "SYNTAX IS OK" << endl;
-
 	system("pause");
 
 	delete parser;

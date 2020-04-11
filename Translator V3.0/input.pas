@@ -1,3 +1,11 @@
+function foo(x, h: integer): boolean;
+var	
+	c: string;
+begin
+	while(true) do
+		c:= 'test string!';
+end;
+
 var
 	a, b:boolean;
 	id, g: integer;

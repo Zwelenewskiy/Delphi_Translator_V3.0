@@ -8,17 +8,17 @@ void Parser::Parse(string path)
 
 	bool correct = true;
 
-	if (match(new Token("var"), false)) {
-		if (!parse_var()) {
-			correct = false;
-		}
+	if (current_token->value == "function") {
+		correct = parse_function();
+	}
+	else
+	if (current_token->value != "var") {
+			correct = parse_var();
 	}
 	else if (current_token->value != "begin") {
 		correct = false;
 	}
-
-	//current_token = new Token("var");
-
+	
 	while ((current_token != nullptr) && correct) {
 		correct = stmt();
 	}
@@ -38,7 +38,7 @@ void Parser::Parse(string path)
 	}*/
 }
 
-bool Parser::parse_ariphmethical_expr()
+bool Parser::parse_expr()
 {
 	while ((current_token->value != ";") && (current_token->value != "else")) {
 		if (current_token->type == Identificator) {
@@ -57,7 +57,7 @@ bool Parser::parse_ariphmethical_expr()
 						false;
 			}
 
-			if (!parse_ariphmethical_expr())
+			if (!parse_expr())
 				return false;
 		}
 		else if (current_token->type == LogicalOperator) {
@@ -67,7 +67,7 @@ bool Parser::parse_ariphmethical_expr()
 			if (!match(Identificator))
 				return false;
 
-			if (!parse_ariphmethical_expr())
+			if (!parse_expr())
 				return false;
 		}
 		else if (current_token->type == AriphmethicalOperator) {
@@ -77,7 +77,7 @@ bool Parser::parse_ariphmethical_expr()
 			if (!match(Identificator))
 				return false;
 
-			if (!parse_ariphmethical_expr())
+			if (!parse_expr())
 				return false;
 		}
 		else if (current_token->type == Literal) {
@@ -96,7 +96,7 @@ bool Parser::parse_ariphmethical_expr()
 					false;
 			}
 
-			if (!parse_ariphmethical_expr())
+			if (!parse_expr())
 				return false;
 		}
 		else if (current_token->value == "(") {
@@ -109,7 +109,7 @@ bool Parser::parse_ariphmethical_expr()
 					false;
 			}
 
-			if (!parse_ariphmethical_expr())
+			if (!parse_expr())
 				return false;
 		}
 		else if (current_token->value == ")") {
@@ -122,7 +122,7 @@ bool Parser::parse_ariphmethical_expr()
 					false;
 			}
 
-			if (!parse_ariphmethical_expr())
+			if (!parse_expr())
 				return false;
 		}
 		else
@@ -168,8 +168,72 @@ bool Parser::parse_bool_expr()
 	}
 }
 
+bool Parser::parse_function()
+{
+	if (!match(new Token("function")))
+		return false;
+
+	if (!match(Identificator))
+		return false;
+
+	if (!match(new Token("(")))
+		return false;
+
+	if (!parse_param_list())
+		return false;
+
+	if (!match(new Token(")")))
+		return false;
+
+	if (!match(new Token(":")))
+		return false;
+
+	if (!match(TypeData))
+		return false;
+
+	if (!match(new Token(";")))
+		return false;
+
+	if (current_token->value == "var")
+		if (!parse_var())
+			return false;
+
+	if (current_token->value != "begin")
+		return false;
+	
+	if (!stmt())
+		return false;
+}
+
+bool Parser::parse_param_list()
+{
+	while (true) {
+		if (!match(Identificator))
+			return false;
+
+		if (!match(new Token(","), false)) {
+			if (match(new Token(":"))) {
+				if (!match(TypeData))
+					return false;
+			}
+		}
+		else
+			continue;
+
+		if (!match(new Token(";"), false)) {
+			if (current_token->value != ")")
+				return false;
+			else
+				return true;
+		}			
+	}
+}
+
 bool Parser::parse_var()
 {
+	if (!match(new Token("var")))
+			return false;
+
 	if (current_token->type != Identificator)
 		return false;
 
@@ -224,8 +288,11 @@ bool Parser::stmt()
 		}
 		else
 			return false;
+	}		
+	else if (current_token->value == "var") {
+		if (!parse_var())
+			return false;
 	}
-		
 	else if (current_token->value == "if") {
 		if (!match(new Token("if")))
 			return false;
@@ -252,7 +319,7 @@ bool Parser::stmt()
 		if (!match(new Token(":=")))
 			return false;
 
-		if (!parse_ariphmethical_expr())
+		if (!parse_expr())
 			return false;
 
 		if(match(new Token("else"), false)){

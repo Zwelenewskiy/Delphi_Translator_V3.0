@@ -11,8 +11,13 @@ private:
 
 	Token* current_token;
 	Lexer* lexer;
-	bool parse_ariphmethical_expr();
+
+	vector<Token*> vars;//переменные
+
+	bool parse_expr();
 	bool parse_bool_expr();
+	bool parse_function();
+	bool parse_param_list();
 	bool parse_var();
 	bool match(Token* token, bool show_error = true);
 	bool match(TokenType token_type, bool show_error = true);

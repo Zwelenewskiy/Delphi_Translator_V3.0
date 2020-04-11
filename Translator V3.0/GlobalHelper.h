@@ -3,8 +3,8 @@ using namespace std;
 
 #define DIGIT "^[0-9]*[.,]?[0-9]+$"
 #define IDENTIFICATOR "([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*"
-#define STRING "'([A-Z]|[a-z]|[0-9]|\s)*'"
-#define CHAR "'\S{1}'"
+#define STRING R"('([A-Z]|[a-z]|[0-9]|\s|\W)*')"
+#define CHAR R"(^'\S{1}')"
 
 struct Node//структура, описывающая узел AST-дерева
 {
