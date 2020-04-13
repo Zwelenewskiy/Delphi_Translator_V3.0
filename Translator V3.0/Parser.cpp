@@ -11,6 +11,9 @@ void Parser::Parse(string path)
 	if (current_token->value == "function") {
 		correct = parse_function();
 	}
+	else if (current_token->value == "procedure") {
+		correct = parse_procedure();
+	}
 	else
 	if (current_token->value != "var") {
 			correct = parse_var();
@@ -205,6 +208,37 @@ bool Parser::parse_function()
 		return false;
 }
 
+bool Parser::parse_procedure()
+{
+	if (!match(new Token("procedure")))
+		return false;
+
+	if (!match(Identificator))
+		return false;
+
+	if (!match(new Token("(")))
+		return false;
+
+	if (!parse_param_list())
+		return false;
+
+	if (!match(new Token(")")))
+		return false;
+
+	if (!match(new Token(";")))
+		return false;
+
+	if (current_token->value == "var")
+		if (!parse_var())
+			return false;
+
+	if (current_token->value != "begin")
+		return false;
+
+	if (!stmt())
+		return false;
+}
+
 bool Parser::parse_param_list()
 {
 	while (true) {
@@ -274,6 +308,10 @@ bool Parser::stmt()
 
 	if (current_token->value == "function") {
 		if (!parse_function())
+			return false;
+	}
+	else if(current_token->value == "procedure") {
+		if (!parse_procedure())
 			return false;
 	}
 	else if(current_token->value == "var") {

@@ -1,3 +1,19 @@
+procedure Proc();
+var	
+	a: integer;
+	b: boolean;
+begin
+	if(b) then
+		a:= 123;
+end;
+
+procedure Proc1();
+var	
+	a: integer;
+	b: boolean;
+begin
+end;
+
 function foo(x, h: integer): boolean;
 var	
 	c: string;

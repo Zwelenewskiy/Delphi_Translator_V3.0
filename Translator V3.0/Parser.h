@@ -17,6 +17,7 @@ private:
 	bool parse_expr();
 	bool parse_bool_expr();
 	bool parse_function();
+	bool parse_procedure();
 	bool parse_param_list();
 	bool parse_var();
 	bool match(Token* token, bool show_error = true);
