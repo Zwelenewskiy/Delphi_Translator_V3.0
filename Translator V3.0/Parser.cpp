@@ -208,8 +208,12 @@ bool Parser::parse_function()
 bool Parser::parse_param_list()
 {
 	while (true) {
-		if (!match(Identificator))
-			return false;
+		if (!match(Identificator, false)) {
+			if (current_token->value != ")")
+				return false;
+			else
+				return true;
+		}
 
 		if (!match(new Token(","), false)) {
 			if (match(new Token(":"))) {
@@ -268,7 +272,15 @@ bool Parser::stmt()
 		return true;
 	}
 
-	if (current_token->value == "begin") {
+	if (current_token->value == "function") {
+		if (!parse_function())
+			return false;
+	}
+	else if(current_token->value == "var") {
+		if (!parse_var())
+			return false;
+	}
+	else if (current_token->value == "begin") {
 		if (!match(new Token("begin")))
 			return false;
 

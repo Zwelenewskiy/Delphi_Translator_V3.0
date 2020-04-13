@@ -6,6 +6,10 @@ begin
 		c:= 'test string!';
 end;
 
+function foo1(): integer;
+begin
+end;
+
 var
 	a, b:boolean;
 	id, g: integer;
