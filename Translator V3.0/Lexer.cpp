@@ -269,7 +269,10 @@ Token* Lexer::DefineTokenType(string lexem)
 	return token;
 }
 
-Token::Token(){}
+Token::Token(){
+	check_type = Undefined;
+	id = -1;
+}
 
 Token::Token(string val)
 {

@@ -11,6 +11,14 @@
 
 using namespace std;
 
+enum  CheckTokenType
+{
+	Var,
+	Function,
+	Procedure,
+	Undefined
+};
+
 enum TokenType
 {
 	Identificator,//0
@@ -29,6 +37,8 @@ class Token
 public:
 	TokenType type;
 	string value;
+	CheckTokenType check_type;
+	int id;
 
 	Token();
 	Token(string val);
@@ -38,11 +48,11 @@ class Lexer
 {
 private:
 	string PATH;
-	streampos current_file_pos;
-
 	Token* DefineTokenType(string lexem);
 
 public:
+	streampos current_file_pos;
+
 	Lexer(string path);
 	~Lexer();
 

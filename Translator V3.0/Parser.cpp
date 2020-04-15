@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include "Lexer.h"
+#include "SymbolTable.h"
 
 void Parser::Parse(string path)
 {
@@ -14,9 +15,8 @@ void Parser::Parse(string path)
 	else if (current_token->value == "procedure") {
 		correct = parse_procedure();
 	}
-	else
-	if (current_token->value != "var") {
-			correct = parse_var();
+	else if (current_token->value == "var") {
+		correct = parse_var();
 	}
 	else if (current_token->value != "begin") {
 		correct = false;
@@ -47,6 +47,31 @@ bool Parser::parse_expr()
 		if (current_token->type == Identificator) {
 			if (!match(Identificator))
 				return false;
+
+			if (!match(new Token(":="), false))
+				return false;
+
+			save_state();
+			if (!match(Identificator, false)) {
+				if (!match(Literal, false))
+					return false;
+			}
+			else {
+				load_state();
+				if (!exist_in_table(current_token)) {
+					cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
+					return false;
+				}
+
+				if (current_token->check_type == Function) {
+					if (!parse_call())
+						return false;
+				}
+				else {
+					cout << endl << "EXPECTED FUNCTION: " << current_token->value << endl;
+					return false;
+				}
+			}
 
 			if (current_token->value == ";")
 				return true;
@@ -108,8 +133,7 @@ bool Parser::parse_expr()
 
 			if (!match(LogicalOperator, false)) {
 				if (!match(AriphmethicalOperator))
-					return
-					false;
+					return false;
 			}
 
 			if (!parse_expr())
@@ -176,6 +200,15 @@ bool Parser::parse_function()
 	if (!match(new Token("function")))
 		return false;
 
+	if (current_token->type != Identificator)
+		return false;
+
+	if (exist_in_table(current_token)) {
+		return false;
+	}
+	else
+		add_in_table(current_token, Function);
+
 	if (!match(Identificator))
 		return false;
 
@@ -208,13 +241,43 @@ bool Parser::parse_function()
 		return false;
 }
 
+bool Parser::parse_call()
+{
+	if (!match(Identificator))
+		return false;
+
+	if (!match(new Token("(")))
+		return false;
+
+	if (!parse_call_param_list())
+		return false;
+
+	if (!match(new Token(")")))
+		return false;
+
+	if (current_token->value == ";")
+		return true;
+	else
+		return false;
+}
+
 bool Parser::parse_procedure()
 {
 	if (!match(new Token("procedure")))
 		return false;
 
-	if (!match(Identificator))
+	if(current_token->type != Identificator)
 		return false;
+
+	if (exist_in_table(current_token)) {
+		return false;
+	}
+	else
+		add_in_table(current_token, Procedure);
+
+	if (!match(Identificator)) {
+		return false;
+	}
 
 	if (!match(new Token("(")))
 		return false;
@@ -267,19 +330,49 @@ bool Parser::parse_param_list()
 	}
 }
 
+bool Parser::parse_call_param_list()
+{
+	while (true) {
+		if (!match(Identificator, false)) {
+			if (!match(Literal, false))
+			{
+				if (current_token->value != ")")
+					return false;
+			}			
+		}
+
+		if (current_token->value == ")")
+			return true;
+
+		if (!match(new Token(","), false)) {
+			return false;
+		}
+		else
+			continue;
+	}
+}
+
 bool Parser::parse_var()
 {
 	if (!match(new Token("var")))
 			return false;
 
-	if (current_token->type != Identificator)
+	if (current_token->type != Identificator) 
 		return false;
 
 	while (current_token->value != "begin")
 	{
 		if (current_token->type == Identificator) {
-			if (!match(Identificator))
+			if (exist_in_table(current_token)) {
+				cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
 				return false;
+			}
+			else
+				add_in_table(current_token, Var);
+
+			if (!match(Identificator)) {
+				return false;
+			}
 
 			if (!match(new Token(","), false)) {
 				if (match(new Token(":"))) {
@@ -297,6 +390,57 @@ bool Parser::parse_var()
 		}		
 	}
 
+	return true;
+}
+
+void Parser::save_state()
+{
+	tmp_current_file_pos = lexer->current_file_pos;
+	tmp_current_token = current_token;
+}
+
+void Parser::load_state()
+{
+	lexer->current_file_pos = tmp_current_file_pos;
+	current_token = tmp_current_token;
+}
+
+bool Parser::check(Token* &token, CheckTokenType type)
+{
+	if (token->type != Identificator)
+		return false;
+
+	switch (type) {
+	Var:
+		for (int i = 0; i < vars.size(); i++)
+			if (vars[i]->value == token->value)
+				return false;			
+
+		vars.push_back(token);
+		token->id = vars.size() - 1;
+
+		break;
+	Function:
+		for (int i = 0; i < functions.size(); i++)
+			if (vars[i]->value == token->value)
+				return false;
+
+		functions.push_back(token);
+		token->id = functions.size() - 1; 
+
+		break;
+	Procedure:
+		for (int i = 0; i < procedures.size(); i++)
+			if (vars[i]->value == token->value)
+				return false;
+
+		procedures.push_back(token);
+		token->id = procedures.size() - 1;
+
+		break;
+	}
+	
+	token->check_type = type;
 	return true;
 }
 
@@ -363,14 +507,22 @@ bool Parser::stmt()
 			return false;
 	}
 	else  if (current_token->type == Identificator) {
-		if (!match(Identificator))
-			return false;
+		save_state();
 
-		if (!match(new Token(":=")))
+		if (!exist_in_table(current_token)) {
+			cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
 			return false;
+		}
 
-		if (!parse_expr())
-			return false;
+		if (current_token->check_type == Var) {
+			if (!parse_expr())
+				return false;
+		}
+		else if ((current_token->check_type == Function) ||
+				(current_token->check_type == Procedure)) {
+			if (!parse_call()) 
+				load_state();
+		}	
 
 		if(match(new Token("else"), false)){
 			if (!stmt())
@@ -409,9 +561,10 @@ bool Parser::stmt()
 
 bool Parser::match(Token* token, bool show_error)
 {
-	if (token->value == current_token->value) {
-		current_token = lexer->GetToken();
-		return true;
+	if (token->value == current_token->value) {		
+			current_token = lexer->GetToken();
+			return true;
+			
 	}
 	else if(show_error){
 		cout << endl << "EXPECTED TOKEN: " << token->value << endl;
