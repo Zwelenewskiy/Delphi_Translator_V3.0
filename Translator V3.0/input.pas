@@ -1,24 +1,11 @@
-procedure Proc();
-var
-	b: boolean;
-begin
-	if(b) then
-		Proc();
-	
-	while(b) do
-	begin
-		b:= 1;
-	end;
-end;
-
-function Foo(a: integer): boolean;
-begin
-end;
-
+function Foo(): integer;
 var
 	a: integer;
-begin				
-	a:= foo();
-	
-	PROC();
+begin
+end;
+
+var
+	b: integer;
+begin
+	a:= 2;
 end.

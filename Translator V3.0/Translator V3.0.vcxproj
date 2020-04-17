@@ -115,12 +115,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Env.cpp" />
     <ClCompile Include="GlobalHelper.cpp" />
     <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Env.h" />
     <ClInclude Include="GlobalHelper.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="Parser.h" />

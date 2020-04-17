@@ -1,9 +1,9 @@
 #include "Parser.h"
 #include "Lexer.h"
-#include "SymbolTable.h"
+#include "SymbolTable.h";
 
 void Parser::Parse(string path)
-{
+{ 
 	lexer = new Lexer(path);
 	current_token = lexer->GetToken();
 
@@ -58,7 +58,7 @@ bool Parser::parse_expr()
 			}
 			else {
 				load_state();
-				if (!exist_in_table(current_token)) {
+				if (!current_env->get(current_token) && !global_env->get(current_token)) {
 					cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
 					return false;
 				}
@@ -117,6 +117,15 @@ bool Parser::parse_expr()
 
 			if (current_token->value == "else")
 				return true;
+			
+			if (current_token->value == ")") {
+				if (current_token->value == ";")
+					return true;
+				else {
+					match(new Token(")"));
+					continue;
+				}
+			}
 
 			if (!match(LogicalOperator, false)) {
 				if (!match(AriphmethicalOperator))
@@ -130,6 +139,28 @@ bool Parser::parse_expr()
 		else if (current_token->value == "(") {
 			if (!match(new Token("(")))
 				return false;
+
+			save_state();
+			if (!match(Identificator, false)) {
+				if (!match(Literal, false))
+					return false;
+			}
+			else {
+				load_state();
+				if (!current_env->get(current_token) && !global_env->get(current_token)) {
+					cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
+					return false;
+				}
+
+				if (current_token->check_type == Function) {
+					if (!parse_call())
+						return false;
+				}
+				else {
+					cout << endl << "EXPECTED FUNCTION: " << current_token->value << endl;
+					return false;
+				}
+			}
 
 			if (!match(LogicalOperator, false)) {
 				if (!match(AriphmethicalOperator))
@@ -203,11 +234,14 @@ bool Parser::parse_function()
 	if (current_token->type != Identificator)
 		return false;
 
-	if (exist_in_table(current_token)) {
+	current_token->check_type = Function;
+	if (!global_env->get(current_token)) {
+		global_env->put(current_token);
+	}
+	else {
+		cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
 		return false;
 	}
-	else
-		add_in_table(current_token, Function);
 
 	if (!match(Identificator))
 		return false;
@@ -236,7 +270,7 @@ bool Parser::parse_function()
 
 	if (current_token->value != "begin")
 		return false;
-	
+
 	if (!stmt())
 		return false;
 }
@@ -269,11 +303,14 @@ bool Parser::parse_procedure()
 	if(current_token->type != Identificator)
 		return false;
 
-	if (exist_in_table(current_token)) {
+	current_token->check_type = Procedure;
+	if (!global_env->get(current_token)) {
+		global_env->put(current_token);
+	}
+	else {
+		cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
 		return false;
 	}
-	else
-		add_in_table(current_token, Procedure);
 
 	if (!match(Identificator)) {
 		return false;
@@ -352,8 +389,15 @@ bool Parser::parse_call_param_list()
 	}
 }
 
-bool Parser::parse_var()
+bool Parser::parse_var(bool global)
 {
+	Env* env;
+
+	if (global)
+		env = global_env;
+	else
+		env = new Env(Local);
+
 	if (!match(new Token("var")))
 			return false;
 
@@ -363,12 +407,27 @@ bool Parser::parse_var()
 	while (current_token->value != "begin")
 	{
 		if (current_token->type == Identificator) {
-			if (exist_in_table(current_token)) {
-				cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
-				return false;
+			current_token->check_type = Var;
+
+			if (global) {
+				if (!global_env->get(current_token)) {
+					env->put(current_token);
+				}
+				else {
+					cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
+					return false;
+				}
 			}
-			else
-				add_in_table(current_token, Var);
+			else {
+				if(!env->get(current_token) && !global_env->get(current_token)) {
+					env->put(current_token);
+				}
+				else {
+					cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
+					return false;
+				}					
+			}
+				
 
 			if (!match(Identificator)) {
 				return false;
@@ -390,6 +449,15 @@ bool Parser::parse_var()
 		}		
 	}
 
+	if (global) {
+		current_env = global_env;
+		envs.push_back(global_env);
+	}
+	else {
+		current_env = env;
+		envs.push_back(env);
+	}
+
 	return true;
 }
 
@@ -403,45 +471,6 @@ void Parser::load_state()
 {
 	lexer->current_file_pos = tmp_current_file_pos;
 	current_token = tmp_current_token;
-}
-
-bool Parser::check(Token* &token, CheckTokenType type)
-{
-	if (token->type != Identificator)
-		return false;
-
-	switch (type) {
-	Var:
-		for (int i = 0; i < vars.size(); i++)
-			if (vars[i]->value == token->value)
-				return false;			
-
-		vars.push_back(token);
-		token->id = vars.size() - 1;
-
-		break;
-	Function:
-		for (int i = 0; i < functions.size(); i++)
-			if (vars[i]->value == token->value)
-				return false;
-
-		functions.push_back(token);
-		token->id = functions.size() - 1; 
-
-		break;
-	Procedure:
-		for (int i = 0; i < procedures.size(); i++)
-			if (vars[i]->value == token->value)
-				return false;
-
-		procedures.push_back(token);
-		token->id = procedures.size() - 1;
-
-		break;
-	}
-	
-	token->check_type = type;
-	return true;
 }
 
 bool Parser::stmt()
@@ -459,7 +488,7 @@ bool Parser::stmt()
 			return false;
 	}
 	else if(current_token->value == "var") {
-		if (!parse_var())
+		if (!parse_var(true))
 			return false;
 	}
 	else if (current_token->value == "begin") {
@@ -509,7 +538,7 @@ bool Parser::stmt()
 	else  if (current_token->type == Identificator) {
 		save_state();
 
-		if (!exist_in_table(current_token)) {
+		if (!current_env->get(current_token) && !global_env->get(current_token)) {
 			cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
 			return false;
 		}

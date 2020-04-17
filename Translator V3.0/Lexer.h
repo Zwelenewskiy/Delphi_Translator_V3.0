@@ -38,7 +38,6 @@ public:
 	TokenType type;
 	string value;
 	CheckTokenType check_type;
-	int id;
 
 	Token();
 	Token(string val);

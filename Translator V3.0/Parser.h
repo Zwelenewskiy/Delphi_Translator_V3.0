@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include "Lexer.h"
+#include "Env.h";
 
 using namespace std;
 
@@ -14,10 +15,6 @@ private:
 	Token* tmp_current_token;
 	Lexer* lexer;
 
-	vector<Token*> vars;//переменные
-	vector<Token*> functions;//переменные
-	vector<Token*> procedures;//переменные
-
 	bool parse_expr();
 	bool parse_bool_expr();
 
@@ -27,12 +24,10 @@ private:
 	bool parse_call();
 	bool parse_param_list();
 	bool parse_call_param_list();
-	bool parse_var();
+	bool parse_var(bool global = false);
 
 	void save_state();
 	void load_state();
-
-	bool check(Token* &token, CheckTokenType type);
 
 	//var - когда парсим объявление переменных 								
 	bool match(Token* token, bool show_error = true);
