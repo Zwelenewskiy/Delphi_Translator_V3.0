@@ -5,6 +5,18 @@
 
 using namespace std;
 
+enum DataTypes {
+	Integer,
+	Double,
+	Char,
+	String
+};
+
+struct Variable {
+	string name;
+	DataTypes data_type;
+};
+
 class Parser
 {
 private:
@@ -29,8 +41,7 @@ private:
 
 	void save_state();
 	void load_state();
-
-	//var - когда парсим объ€вление переменных 								
+							
 	bool match(Token* token, bool show_error = true);
 	bool match(TokenType token_type, bool show_error = true);
 	bool stmt();

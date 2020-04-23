@@ -1,8 +1,6 @@
 #include "Env.h"
 
-Env::Env(EnvType t) {}
-
-Env::Env() { }
+Env::Env() {}
 
 Env::~Env(){}
 

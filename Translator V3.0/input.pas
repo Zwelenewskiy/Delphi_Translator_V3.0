@@ -1,8 +1,4 @@
-function Foo(a, b: integer): boolean;
-begin
-end;
-
-function Foo(a, b: integer): boolean;
+function Foo(b, b: integer): boolean;
 begin
 end;
 

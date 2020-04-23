@@ -13,7 +13,6 @@ enum EnvType {
 class Env
 {
 public:
-	Env(EnvType t);
 	Env();
 	~Env();
 

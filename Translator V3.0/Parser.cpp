@@ -312,13 +312,25 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 
 bool Parser::parse_param_list()
 {
+	Token* tmp_token;
 	while (true) {
+		tmp_token = current_token;
+
 		if (!match(Identificator, false)) {
 			if (current_token->value != ")")
 				return false;
 			else
 				return true;
 		}
+		else {
+			if (!current_env->get(tmp_token)) {
+				current_env->put(tmp_token);
+			}
+			else {
+				cout << endl << "TOKEN ALREADY EXIST: " << tmp_token->value << endl;
+				return false;
+			}
+		}		
 
 		if (!match(new Token(","), false)) {
 			if (match(new Token(":"))) {
@@ -367,7 +379,7 @@ bool Parser::parse_var(bool global)
 	if (global)
 		env = global_env;
 	else
-		env = new Env(Local);
+		env = new Env();
 
 	if (!match(new Token("var")))
 			return false;
