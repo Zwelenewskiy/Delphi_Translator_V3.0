@@ -9,11 +9,11 @@ void Parser::Parse(string path)
 
 	bool correct = true;
 
-	if (current_token->value == "function") {
-		correct = parse_function();
+	if (to_lower(current_token->value) == "function") {
+		correct = parse_subprogramm(Function);
 	}
-	else if (current_token->value == "procedure") {
-		correct = parse_procedure();
+	else if (to_lower(current_token->value) == "procedure") {
+		correct = parse_subprogramm(Procedure);
 	}
 	else if (current_token->value == "var") {
 		correct = parse_var();
@@ -226,59 +226,6 @@ bool Parser::parse_bool_expr()
 	}
 }
 
-bool Parser::parse_function()
-{
-	if (!match(new Token("function")))
-		return false;
-
-	if (current_token->type != Identificator)
-		return false;
-
-	current_token->check_type = Function;
-	if (!global_env->get(current_token)) {
-		global_env->put(current_token);
-	}
-	else {
-		cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
-		return false;
-	}
-
-	if (!match(Identificator))
-		return false;
-
-	if (!match(new Token("(")))
-		return false;
-
-	if (!parse_param_list())
-		return false;
-
-	if (!match(new Token(")")))
-		return false;
-
-	if (!match(new Token(":")))
-		return false;
-
-	if (!match(TypeData))
-		return false;
-
-	if (!match(new Token(";")))
-		return false;
-
-	if (current_token->value == "var")
-		if (!parse_var())
-			return false;
-
-	if (current_token->value != "begin")
-		return false;
-
-	if (match(new Token("end"), false))
-		return true;
-	else {
-		if (!stmt())
-			return false;
-	}	
-}
-
 bool Parser::parse_call()
 {
 	if (!match(Identificator))
@@ -299,15 +246,24 @@ bool Parser::parse_call()
 		return false;
 }
 
-bool Parser::parse_procedure()
+bool Parser::parse_subprogramm(CheckTokenType type)
 {
-	if (!match(new Token("procedure")))
-		return false;
+	if (type == Function) {
+		if (!match(new Token("function")))
+			return false;
 
-	if(current_token->type != Identificator)
-		return false;
+		current_token->check_type = Function;
+	}
+	else if (type == Procedure) {
+		if (!match(new Token("procedure")))
+			return false;
 
-	current_token->check_type = Procedure;
+		current_token->check_type = Procedure;
+	}	
+
+	if (current_token->type != Identificator)
+		return false;
+	
 	if (!global_env->get(current_token)) {
 		global_env->put(current_token);
 	}
@@ -316,9 +272,8 @@ bool Parser::parse_procedure()
 		return false;
 	}
 
-	if (!match(Identificator)) {
+	if (!match(Identificator))
 		return false;
-	}
 
 	if (!match(new Token("(")))
 		return false;
@@ -328,6 +283,14 @@ bool Parser::parse_procedure()
 
 	if (!match(new Token(")")))
 		return false;
+
+	if (type == Function) {
+		if (!match(new Token(":")))
+			return false;
+
+		if (!match(TypeData))
+			return false;
+	}	
 
 	if (!match(new Token(";")))
 		return false;
@@ -487,12 +450,12 @@ bool Parser::stmt()
 		return true;
 	}
 
-	if (current_token->value == "function") {
-		if (!parse_function())
+	if (to_lower(current_token->value) == "function") {
+		if (!parse_subprogramm(Function))
 			return false;
 	}
-	else if(current_token->value == "procedure") {
-		if (!parse_procedure())
+	else if(to_lower(current_token->value) == "procedure") {
+		if (!parse_subprogramm(Procedure))
 			return false;
 	}
 	else if(current_token->value == "var") {
@@ -619,13 +582,6 @@ bool Parser::match(Token* token, bool show_error)
 	if (token->value == current_token->value) {		
 			current_token = lexer->GetToken();
 			return true;
-
-			/*if ((current_token == nullptr) && (token->value != ".")) {
-				cout << endl << "EXPECTED TOKEN: " << token->value << " but found the end of the file" << endl;
-				return false;
-			}
-			else
-				return true;*/
 	}
 	else if(show_error){
 		cout << endl << "EXPECTED TOKEN: " << token->value << endl;

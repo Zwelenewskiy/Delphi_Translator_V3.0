@@ -20,8 +20,7 @@ private:
 	bool parse_expr();
 	bool parse_bool_expr();
 
-	bool parse_function();
-	bool parse_procedure();
+	bool parse_subprogramm(CheckTokenType type);
 
 	bool parse_call();
 	bool parse_param_list();
