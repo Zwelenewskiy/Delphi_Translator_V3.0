@@ -271,8 +271,12 @@ bool Parser::parse_function()
 	if (current_token->value != "begin")
 		return false;
 
-	if (!stmt())
-		return false;
+	if (match(new Token("end"), false))
+		return true;
+	else {
+		if (!stmt())
+			return false;
+	}	
 }
 
 bool Parser::parse_call()
@@ -335,8 +339,12 @@ bool Parser::parse_procedure()
 	if (current_token->value != "begin")
 		return false;
 
-	if (!stmt())
-		return false;
+	if (match(new Token("end"), false))
+		return true;
+	else {
+		if (!stmt())
+			return false;
+	}
 }
 
 bool Parser::parse_param_list()
@@ -492,26 +500,44 @@ bool Parser::stmt()
 			return false;
 	}
 	else if (current_token->value == "begin") {
+		operator_brackets_balance++;
+
 		if (!match(new Token("begin")))
 			return false;
 
 		if (!stmt())
 			return false;	
-	}
-	else if (current_token->value == "end") {
-		if (match(new Token("end"))) {
-			if (match(new Token(";"), false)) {
-				return true;
-			}
-			else if (match(new Token("."))) {
-				return true;
+
+		if (!match(new Token("end"))) {
+			return false;
+		}
+		else {
+			operator_brackets_balance--;
+		}
+
+		if (match(new Token(";"), false)) {
+			return true;
+		}
+		else if (match(new Token("."))) {
+			if (operator_brackets_balance != 0)
+				return false;
+
+			if (current_token != nullptr) {
+				cout << endl << "EXPECTED END OF FILE" << endl;
+				return false;
 			}
 			else
-				return false;
+				return true;
 		}
 		else
 			return false;
-	}		
+	}
+	else if (current_token->value == "end") {
+		if (operator_brackets_balance == 0)
+			return false;
+
+		return true;
+	}
 	else if (current_token->value == "var") {
 		if (!parse_var())
 			return false;
@@ -593,7 +619,13 @@ bool Parser::match(Token* token, bool show_error)
 	if (token->value == current_token->value) {		
 			current_token = lexer->GetToken();
 			return true;
-			
+
+			/*if ((current_token == nullptr) && (token->value != ".")) {
+				cout << endl << "EXPECTED TOKEN: " << token->value << " but found the end of the file" << endl;
+				return false;
+			}
+			else
+				return true;*/
 	}
 	else if(show_error){
 		cout << endl << "EXPECTED TOKEN: " << token->value << endl;
@@ -605,6 +637,11 @@ bool Parser::match(TokenType token_type, bool show_error)
 {
 	if (token_type == current_token->type) {
 		current_token = lexer->GetToken();
+
+		if (current_token == nullptr) {
+			cout << endl << "EXPECTED TOKEN TYPE: " << token_type << " but found the end of the file" << endl;
+			return false;
+		}
 		return true;
 	}
 	else if (show_error) {
@@ -613,6 +650,6 @@ bool Parser::match(TokenType token_type, bool show_error)
 	}
 }
 
-Parser::Parser(){}
+Parser::Parser(){ operator_brackets_balance = bracket_balance = 0; }
 
 Parser::~Parser(){}

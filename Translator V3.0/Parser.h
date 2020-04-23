@@ -9,6 +9,8 @@ class Parser
 {
 private:
 	int bracket_balance;
+	int operator_brackets_balance;
+
 	streampos tmp_current_file_pos;
 
 	Token* current_token;
