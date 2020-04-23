@@ -399,7 +399,6 @@ bool Parser::parse_var(bool global)
 				}					
 			}
 				
-
 			if (!match(Identificator)) {
 				return false;
 			}
@@ -420,14 +419,10 @@ bool Parser::parse_var(bool global)
 		}		
 	}
 
-	if (global) {
+	if (global) 
 		current_env = global_env;
-		envs.push_back(global_env);
-	}
-	else {
+	else 
 		current_env = env;
-		envs.push_back(env);
-	}
 
 	return true;
 }

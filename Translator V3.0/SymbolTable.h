@@ -6,7 +6,5 @@
 
 using namespace std;
 
-vector<Env*> envs;
-
-Env* global_env = new Env(Global);
+Env* global_env = new Env();
 Env* current_env = new Env();

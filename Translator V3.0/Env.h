@@ -12,13 +12,11 @@ enum EnvType {
 
 class Env
 {
-private:
 public:
 	Env(EnvType t);
 	Env();
 	~Env();
 
-	EnvType type;
 	vector<Token*> table;
 	void put(Token*  token);
 	bool get(Token*& token);
