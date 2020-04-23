@@ -1,4 +1,4 @@
-function Foo(b, b: integer): boolean;
+function Foo(b: char): boolean;
 begin
 end;
 

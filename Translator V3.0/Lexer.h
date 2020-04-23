@@ -19,6 +19,15 @@ enum  CheckTokenType
 	Undefined
 };
 
+enum DataTypes {
+	Integer,
+	Double,
+	Float,
+	Char,
+	String,
+	Boolean
+};
+
 enum TokenType
 {
 	Identificator,//0
@@ -32,12 +41,23 @@ enum TokenType
 	TypeData//8
 };
 
+struct Variable {
+	string name;
+	DataTypes data_type;
+
+	Variable(string n, DataTypes t) {
+		name = n;
+		data_type = t;
+	}
+};
+
 class Token
 {
 public:
 	TokenType type;
 	string value;
 	CheckTokenType check_type;
+	vector<Variable> signature;
 
 	Token();
 	Token(string val);

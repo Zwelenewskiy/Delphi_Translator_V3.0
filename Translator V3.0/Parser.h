@@ -5,18 +5,6 @@
 
 using namespace std;
 
-enum DataTypes {
-	Integer,
-	Double,
-	Char,
-	String
-};
-
-struct Variable {
-	string name;
-	DataTypes data_type;
-};
-
 class Parser
 {
 private:
@@ -35,7 +23,7 @@ private:
 	bool parse_subprogramm(CheckTokenType type);
 
 	bool parse_call();
-	bool parse_param_list();
+	bool parse_param_list(vector<Variable>& signature);
 	bool parse_call_param_list();
 	bool parse_var(bool global = false);
 

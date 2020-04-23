@@ -217,7 +217,8 @@ Token* Lexer::DefineTokenType(string lexem)
 		//cout << " Operator" << endl;
 	}
 	else if ((to_lower(lexem) == "integer") || (to_lower(lexem) == "string") 
-		|| (to_lower(lexem) == "boolean") || (to_lower(lexem) == "char")) {
+		|| (to_lower(lexem) == "boolean") || (to_lower(lexem) == "char")
+		|| (to_lower(lexem) == "float") || (to_lower(lexem) == "double")) {
 		token->type = TypeData;
 
 		//cout << " TypeData" << endl;

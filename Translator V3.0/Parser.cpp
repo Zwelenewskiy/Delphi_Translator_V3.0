@@ -261,6 +261,8 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 		current_token->check_type = Procedure;
 	}	
 
+	Token* subprogramm = current_token;
+
 	if (current_token->type != Identificator)
 		return false;
 	
@@ -277,9 +279,12 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 
 	if (!match(new Token("(")))
 		return false;
-
-	if (!parse_param_list())
+	
+	vector<Variable> signature;
+	if (!parse_param_list(signature))
 		return false;
+
+	subprogramm->signature = signature;
 
 	if (!match(new Token(")")))
 		return false;
@@ -310,21 +315,25 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 	}
 }
 
-bool Parser::parse_param_list()
+bool Parser::parse_param_list(vector<Variable>& signature)
 {
 	Token* tmp_token;
+	vector<Token*> tmp_vars;
+
 	while (true) {
 		tmp_token = current_token;
 
 		if (!match(Identificator, false)) {
 			if (current_token->value != ")")
-				return false;
+				return false; 
 			else
 				return true;
 		}
 		else {
 			if (!current_env->get(tmp_token)) {
 				current_env->put(tmp_token);
+
+				tmp_vars.push_back(tmp_token);
 			}
 			else {
 				cout << endl << "TOKEN ALREADY EXIST: " << tmp_token->value << endl;
@@ -334,8 +343,25 @@ bool Parser::parse_param_list()
 
 		if (!match(new Token(","), false)) {
 			if (match(new Token(":"))) {
+				Token* data_type = current_token;
 				if (!match(TypeData))
 					return false;
+				else {
+					for (int i = 0; i < tmp_vars.size(); i++) {
+						if(data_type->value == "integer")
+							signature.push_back(Variable(tmp_vars[i]->value, Integer));
+						else if (data_type->value == "boolean")
+							signature.push_back(Variable(tmp_vars[i]->value, Boolean));
+						else if (data_type->value == "char")
+							signature.push_back(Variable(tmp_vars[i]->value, Char));
+						else if (data_type->value == "double")
+							signature.push_back(Variable(tmp_vars[i]->value, Double));
+						else if (data_type->value == "float")
+							signature.push_back(Variable(tmp_vars[i]->value, Float));
+						else if (data_type->value == "string")
+							signature.push_back(Variable(tmp_vars[i]->value, String));
+					}
+				}
 			}
 		}
 		else
