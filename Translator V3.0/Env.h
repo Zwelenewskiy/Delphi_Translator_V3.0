@@ -20,6 +20,6 @@ public:
 	~Env();
 
 	void put(Token*  token);
-	bool get(Token*& token);
+	bool get(Token*& token, bool check_sign = true);
 };
 

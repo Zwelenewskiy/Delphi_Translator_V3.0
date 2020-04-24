@@ -27,6 +27,8 @@ private:
 	bool parse_call_param_list();
 	bool parse_var(bool global = false);
 
+	bool parse_struct();
+
 	void save_state();
 	void load_state();
 							

@@ -1,6 +1,7 @@
-function Foo(b: char): boolean;
+procedure proc();
 begin
 end;
 
 begin
+	proc();
 end.

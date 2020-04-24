@@ -28,18 +28,20 @@ void Env::put(Token* token)
 	table.push_back(token);
 }
 
-bool Env::get(Token*& token)
+bool Env::get(Token*& token, bool check_sign)
 {
 	for (int i = 0; i < table.size(); i++) {
 		if (table[i]->value == token->value) {
-			if ((table[i]->check_type == Procedure)
-				|| (table[i]->check_type == Function))
-			{
-				if (!check_signature(token, table[i])) {
-					token = table[i];
-					return true;
+			if (check_sign) {
+				if ((table[i]->check_type == Procedure)
+					|| (table[i]->check_type == Function))
+				{
+					if (!check_signature(token, table[i])) {
+						token = table[i];
+						return true;
+					}
 				}
-			}
+			}			
 			else {
 				token = table[i];
 				return true;

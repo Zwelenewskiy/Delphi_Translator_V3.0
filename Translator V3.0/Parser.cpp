@@ -8,8 +8,22 @@ void Parser::Parse(string path)
 	current_token = lexer->GetToken();
 
 	bool correct = true;
+	if (to_lower(current_token->value) == "type") {
+		match(new Token("type"));
 
-	if (to_lower(current_token->value) == "function") {
+		if (!match(Identificator))
+			correct = false;
+
+		if (!match(new Token("=")))
+			correct = false;
+
+		if(to_lower(current_token->value) == "struct")
+			correct = parse_struct();
+		else if (to_lower(current_token->value) == "class"){
+
+		}
+	}
+	else if (to_lower(current_token->value) == "function") {
 		correct = parse_subprogramm(Function);
 	}
 	else if (to_lower(current_token->value) == "procedure") {
@@ -387,7 +401,7 @@ bool Parser::parse_call_param_list()
 				if (current_token->value != ")")
 					return false;
 			}			
-		}
+		} 
 
 		if (current_token->value == ")")
 			return true;
@@ -465,6 +479,11 @@ bool Parser::parse_var(bool global)
 		current_env = env;
 
 	return true;
+}
+
+bool Parser::parse_struct()
+{
+	return false;
 }
 
 void Parser::save_state()
@@ -562,7 +581,7 @@ bool Parser::stmt()
 	else  if (current_token->type == Identificator) {
 		save_state();
 
-		if (!current_env->get(current_token) && !global_env->get(current_token)) {
+		if (!current_env->get(current_token, false) && !global_env->get(current_token, false)) {
 			cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
 			return false;
 		}
