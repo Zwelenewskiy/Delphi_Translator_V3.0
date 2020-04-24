@@ -394,7 +394,9 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 
 bool Parser::parse_call_param_list()
 {
+	vector<Variable> signature;
 	while (true) {
+		Token* tmp = current_token;
 		if (!match(Identificator, false)) {
 			if (!match(Literal, false))
 			{
@@ -402,6 +404,9 @@ bool Parser::parse_call_param_list()
 					return false;
 			}			
 		} 
+		/*else {
+			signature.push_back(Variable());
+		}*/
 
 		if (current_token->value == ")")
 			return true;
@@ -417,6 +422,8 @@ bool Parser::parse_call_param_list()
 bool Parser::parse_var(bool global)
 {
 	Env* env;
+	Token* tmp_token;
+	vector<Token*> tmp_vars;
 
 	if (global)
 		env = global_env;
@@ -436,7 +443,7 @@ bool Parser::parse_var(bool global)
 
 			if (global) {
 				if (!global_env->get(current_token)) {
-					env->put(current_token);
+					tmp_vars.push_back(current_token);
 				}
 				else {
 					cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
@@ -445,7 +452,7 @@ bool Parser::parse_var(bool global)
 			}
 			else {
 				if(!env->get(current_token) && !global_env->get(current_token)) {
-					env->put(current_token);
+					tmp_vars.push_back(current_token);
 				}
 				else {
 					cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
@@ -459,12 +466,33 @@ bool Parser::parse_var(bool global)
 
 			if (!match(new Token(","), false)) {
 				if (match(new Token(":"))) {
+					Token* data_type = current_token;
+
 					if (match(TypeData)) {
 						if (!match(new Token(";"))) {
 							return false;
 						}
-						else
+						else {
+							for (int i = 0; i < tmp_vars.size(); i++) {
+
+								if (data_type->value == "integer")
+									tmp_vars[i]->data_type = Integer;
+								else if (data_type->value == "boolean")
+									tmp_vars[i]->data_type = Boolean;
+								else if (data_type->value == "char")
+									tmp_vars[i]->data_type = Char;
+								else if (data_type->value == "double")
+									tmp_vars[i]->data_type = Double;
+								else if (data_type->value == "float")
+									tmp_vars[i]->data_type = Float;
+								else if (data_type->value == "string")
+									tmp_vars[i]->data_type = String;
+
+								env->put(tmp_vars[i]);
+							}
+
 							continue;
+						}
 					}
 				}
 				else

@@ -58,6 +58,7 @@ public:
 	string value;
 	CheckTokenType check_type;
 	vector<Variable> signature;
+	DataTypes data_type;
 
 	Token();
 	Token(string val);
