@@ -22,15 +22,17 @@ private:
 
 	bool parse_subprogramm(CheckTokenType type);
 
-	bool parse_call();
+	bool parse_call(Token* subprogram_token);
 	bool parse_param_list(vector<Variable>& signature);
-	bool parse_call_param_list();
+	bool parse_call_param_list(vector<Variable>& signature);
 	bool parse_var(bool global = false);
 
 	bool parse_struct();
 
 	void save_state();
 	void load_state();
+
+	DataTypes define_data_type(Token* token);
 							
 	bool match(Token* token, bool show_error = true);
 	bool match(TokenType token_type, bool show_error = true);

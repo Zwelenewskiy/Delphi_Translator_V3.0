@@ -1,10 +1,11 @@
 #pragma once
 using namespace std;
 
-#define DIGIT "^[0-9]*[.,]?[0-9]+$"
 #define IDENTIFICATOR "([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*"
-#define STRING R"('([A-Z]|[a-z]|[0-9]|\s|\W)*')"
+#define INTEGER "^-?[0-9]+$"
+#define DIGIT "^-?[0-9]*[.,]?[0-9]+$"
 #define CHAR R"(^'\S{1}')"
+#define STRING R"('([A-Z]|[a-z]|[0-9]|\s|\W)*')"
 
 struct Node//структура, описывающая узел AST-дерева
 {

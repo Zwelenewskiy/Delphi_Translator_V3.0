@@ -20,6 +20,7 @@ public:
 	~Env();
 
 	void put(Token*  token);
+	bool check_signature(Token* token, vector<Variable> signature);
 	bool get(Token*& token, bool check_sign = true);
 };
 

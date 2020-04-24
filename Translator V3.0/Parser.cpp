@@ -78,7 +78,7 @@ bool Parser::parse_expr()
 				}
 
 				if (current_token->check_type == Function) {
-					if (!parse_call())
+					if (!parse_call(current_token))
 						return false;
 				}
 				else {
@@ -167,7 +167,7 @@ bool Parser::parse_expr()
 				}
 
 				if (current_token->check_type == Function) {
-					if (!parse_call())
+					if (!parse_call(current_token))
 						return false;
 				}
 				else {
@@ -240,16 +240,23 @@ bool Parser::parse_bool_expr()
 	}
 }
 
-bool Parser::parse_call()
+bool Parser::parse_call(Token* subprogram_token)
 {
+	Token* tmp = current_token;
 	if (!match(Identificator))
 		return false;
 
 	if (!match(new Token("(")))
 		return false;
 
-	if (!parse_call_param_list())
+	vector<Variable> signature;
+	if (!parse_call_param_list(signature))
 		return false;
+	
+	if (global_env->check_signature(subprogram_token, signature)) {
+		cout << endl << "PARAMETERS DON'T MATCH THE SIGNATURE: " << tmp->value << endl;
+		return false;
+	}
 
 	if (!match(new Token(")")))
 		return false;
@@ -334,9 +341,9 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 bool Parser::parse_param_list(vector<Variable>& signature)
 {
 	Token* tmp_token;
-	vector<Token*> tmp_vars;
 
 	while (true) {
+		vector<Token*> tmp_vars;
 		tmp_token = current_token;
 
 		if (!match(Identificator, false)) {
@@ -352,7 +359,7 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 				tmp_vars.push_back(tmp_token);
 			}
 			else {
-				cout << endl << "TOKEN ALREADY EXIST: " << tmp_token->value << endl;
+				cout << endl << "TOKEN NOT DEFINED: " << tmp_token->value << endl;
 				return false;
 			}
 		}		
@@ -372,8 +379,6 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 							signature.push_back(Variable(tmp_vars[i]->value, Char));
 						else if (data_type->value == "double")
 							signature.push_back(Variable(tmp_vars[i]->value, Double));
-						else if (data_type->value == "float")
-							signature.push_back(Variable(tmp_vars[i]->value, Float));
 						else if (data_type->value == "string")
 							signature.push_back(Variable(tmp_vars[i]->value, String));
 					}
@@ -392,21 +397,30 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 	}
 }
 
-bool Parser::parse_call_param_list()
-{
-	vector<Variable> signature;
+bool Parser::parse_call_param_list(vector<Variable>& signature){
+	;
 	while (true) {
 		Token* tmp = current_token;
 		if (!match(Identificator, false)) {
+			tmp = current_token;
 			if (!match(Literal, false))
 			{
 				if (current_token->value != ")")
 					return false;
 			}			
+			else {
+				signature.push_back(Variable(tmp->value, define_data_type(tmp)));
+			}
 		} 
-		/*else {
-			signature.push_back(Variable());
-		}*/
+		else {
+			if (global_env->get(tmp, false)) {
+				signature.push_back(Variable(tmp->value, tmp->data_type)); 
+			}
+			else {
+				cout << endl << "TOKEN NOT DEFINED: " << tmp->value << endl;
+				return false;
+			}
+		}
 
 		if (current_token->value == ")")
 			return true;
@@ -423,7 +437,6 @@ bool Parser::parse_var(bool global)
 {
 	Env* env;
 	Token* tmp_token;
-	vector<Token*> tmp_vars;
 
 	if (global)
 		env = global_env;
@@ -438,6 +451,8 @@ bool Parser::parse_var(bool global)
 
 	while (current_token->value != "begin")
 	{
+		vector<Token*> tmp_vars;
+
 		if (current_token->type == Identificator) {
 			current_token->check_type = Var;
 
@@ -483,8 +498,6 @@ bool Parser::parse_var(bool global)
 									tmp_vars[i]->data_type = Char;
 								else if (data_type->value == "double")
 									tmp_vars[i]->data_type = Double;
-								else if (data_type->value == "float")
-									tmp_vars[i]->data_type = Float;
 								else if (data_type->value == "string")
 									tmp_vars[i]->data_type = String;
 
@@ -524,6 +537,26 @@ void Parser::load_state()
 {
 	lexer->current_file_pos = tmp_current_file_pos;
 	current_token = tmp_current_token;
+}
+
+DataTypes Parser::define_data_type(Token * token)
+{
+	if (Match_Reg(token->value, STRING))
+		return String;
+
+	if ((to_lower(token->value) == "true") || (to_lower(token->value) == "false"))
+		return Boolean;
+
+	if (Match_Reg(token->value, CHAR))
+		return Char;
+
+	if (Match_Reg(token->value, INTEGER))
+		return Integer;
+
+	if (Match_Reg(token->value, DIGIT))
+		return Double;
+
+	return DataTypes();
 }
 
 bool Parser::stmt()
@@ -620,7 +653,7 @@ bool Parser::stmt()
 		}
 		else if ((current_token->check_type == Function) ||
 				(current_token->check_type == Procedure)) {
-			if (!parse_call()) 
+			if (!parse_call(current_token))
 				load_state();
 		}	
 

@@ -1,9 +1,15 @@
-procedure proc(a: integer);
+procedure proc(a: boolean; b: integer);
+begin
+end;
+
+procedure proc(c: char);
 begin
 end;
 
 var
-	a: integer;
+	b: boolean;
+	thf: integer;
+	ccc: char;
 begin
-	proc();
+	proc(ccc);
 end.

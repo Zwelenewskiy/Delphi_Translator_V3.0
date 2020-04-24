@@ -9,7 +9,7 @@
 #include <regex>
 #include "GlobalHelper.h"
 
-using namespace std;
+using namespace std; 
 
 string to_lower(string s) {
 	transform(s.begin(), s.end(), s.begin(), tolower);

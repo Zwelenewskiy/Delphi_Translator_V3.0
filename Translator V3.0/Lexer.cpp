@@ -218,7 +218,7 @@ Token* Lexer::DefineTokenType(string lexem)
 	}
 	else if ((to_lower(lexem) == "integer") || (to_lower(lexem) == "string") 
 		|| (to_lower(lexem) == "boolean") || (to_lower(lexem) == "char")
-		|| (to_lower(lexem) == "float") || (to_lower(lexem) == "double")) {
+		|| (to_lower(lexem) == "double")) {
 		token->type = TypeData;
 
 		//cout << " TypeData" << endl;
@@ -233,6 +233,12 @@ Token* Lexer::DefineTokenType(string lexem)
 		token->type = KeyWord;
 
 		//cout << " KeyWord" << endl;
+	}
+	else if (Match_Reg(lexem, STRING) || Match_Reg(lexem, CHAR)
+		|| (to_lower(lexem) == "true") || (to_lower(lexem) == "false")) {
+		token->type = Literal;
+
+		//cout << " Literal" << endl;
 	}
 	else if (Match_Reg(lexem, IDENTIFICATOR)) {
 		token->type = Identificator;
@@ -250,12 +256,7 @@ Token* Lexer::DefineTokenType(string lexem)
 		token->type = Separator;
 
 		//cout << " Separator" << endl;
-	}
-	else if (Match_Reg(lexem, STRING) || Match_Reg(lexem, CHAR)) {
-		token->type = Literal;
-
-		//cout << " Literal" << endl;
-	}
+	}	
 	else if (Match_Reg(lexem, DIGIT)) {
 		token->type = Literal;
 

@@ -22,7 +22,6 @@ enum  CheckTokenType
 enum DataTypes {
 	Integer,
 	Double,
-	Float,
 	Char,
 	String,
 	Boolean
