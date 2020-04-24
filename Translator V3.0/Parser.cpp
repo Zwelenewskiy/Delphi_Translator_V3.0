@@ -266,15 +266,7 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 	Token* subprogramm_token = current_token;
 
 	if (current_token->type != Identificator)
-		return false;
-	
-	if (!global_env->get(current_token)) {
-		global_env->put(current_token);
-	}
-	else {
-		cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
-		return false;
-	}
+		return false;	
 
 	if (!match(Identificator))
 		return false;
@@ -287,6 +279,14 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 		return false;
 
 	subprogramm_token->signature = signature;
+
+	if (!global_env->get(subprogramm_token)) {
+		global_env->put(subprogramm_token);
+	}
+	else {
+		cout << endl << "TOKEN ALREADY EXIST: " << subprogramm_token->value << endl;
+		return false;
+	}
 
 	if (!match(new Token(")")))
 		return false;
