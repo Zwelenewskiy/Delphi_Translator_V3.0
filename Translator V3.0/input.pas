@@ -2,7 +2,7 @@ function Foo(b: char): boolean;
 begin
 end;
 
-procedure Proc(a: integer);
+function Foo(b: integer): boolean;
 begin
 end;
 

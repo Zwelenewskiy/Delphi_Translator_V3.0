@@ -248,6 +248,8 @@ bool Parser::parse_call()
 
 bool Parser::parse_subprogramm(CheckTokenType type)
 {
+	current_env = new Env();
+
 	if (type == Function) {
 		if (!match(new Token("function")))
 			return false;
@@ -261,7 +263,7 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 		current_token->check_type = Procedure;
 	}	
 
-	Token* subprogramm = current_token;
+	Token* subprogramm_token = current_token;
 
 	if (current_token->type != Identificator)
 		return false;
@@ -284,7 +286,7 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 	if (!parse_param_list(signature))
 		return false;
 
-	subprogramm->signature = signature;
+	subprogramm_token->signature = signature;
 
 	if (!match(new Token(")")))
 		return false;
