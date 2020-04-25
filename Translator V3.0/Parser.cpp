@@ -541,14 +541,14 @@ void Parser::load_state()
 
 DataTypes Parser::define_data_type(Token * token)
 {
+	if (Match_Reg(token->value, CHAR))
+		return Char;
+
 	if (Match_Reg(token->value, STRING))
 		return String;
 
 	if ((to_lower(token->value) == "true") || (to_lower(token->value) == "false"))
 		return Boolean;
-
-	if (Match_Reg(token->value, CHAR))
-		return Char;
 
 	if (Match_Reg(token->value, INTEGER))
 		return Integer;

@@ -1,15 +1,12 @@
-procedure proc(a: boolean; b: integer);
+procedure p();
 begin
 end;
 
-procedure proc(c: char);
+procedure p(c: char);
 begin
 end;
-
-var
-	b: boolean;
-	thf: integer;
-	ccc: char;
+  
 begin
-	proc(ccc);
+	p();
+	p('s');
 end.
