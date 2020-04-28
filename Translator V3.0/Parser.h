@@ -1,7 +1,8 @@
 #pragma once
 #include <iostream>
 #include "Lexer.h"
-#include "Env.h";
+#include "Env.h"
+#include "GlobalHelper.h"
 
 using namespace std;
 
@@ -10,6 +11,9 @@ class Parser
 private:
 	int bracket_balance;
 	int operator_brackets_balance;
+
+	Env* global_env = new Env();
+	Env* current_env = new Env();
 
 	streampos tmp_current_file_pos;
 
@@ -20,12 +24,12 @@ private:
 	bool parse_expr();
 	bool parse_bool_expr();
 
-	bool parse_subprogramm(CheckTokenType type);
+	bool parse_subprogramm(CheckTokenType type, bool global = true);
 
 	bool parse_call(Token* subprogram_token);
 	bool parse_param_list(vector<Variable>& signature);
 	bool parse_call_param_list(vector<Variable>& signature);
-	bool parse_var(bool global = false);
+	bool parse_var(bool global = false, bool in_struct = false);
 
 	bool parse_struct();
 

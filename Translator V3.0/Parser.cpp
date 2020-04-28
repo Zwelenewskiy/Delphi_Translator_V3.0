@@ -1,6 +1,4 @@
 #include "Parser.h"
-#include "Lexer.h"
-#include "SymbolTable.h";
 
 void Parser::Parse(string path)
 { 
@@ -9,18 +7,17 @@ void Parser::Parse(string path)
 
 	bool correct = true;
 	if (to_lower(current_token->value) == "type") {
+
 		match(new Token("type"));
 
-		if (!match(Identificator))
-			correct = false;
-
-		if (!match(new Token("=")))
-			correct = false;
-
-		if(to_lower(current_token->value) == "struct")
-			correct = parse_struct();
-		else if (to_lower(current_token->value) == "class"){
-
+		while ((current_token->value != "function")
+			&& (current_token->value != "procedure")
+			&& (current_token->value != "var")
+			&& (current_token->value != "begin")) {
+			if (!parse_struct()) {
+				correct = false;
+				break;
+			}
 		}
 	}
 	else if (to_lower(current_token->value) == "function") {
@@ -267,9 +264,10 @@ bool Parser::parse_call(Token* subprogram_token)
 		return false;
 }
 
-bool Parser::parse_subprogramm(CheckTokenType type)
+bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 {
-	current_env = new Env();
+	if(global)
+		current_env = new Env();
 
 	if (type == Function) {
 		if (!match(new Token("function")))
@@ -301,13 +299,24 @@ bool Parser::parse_subprogramm(CheckTokenType type)
 
 	subprogramm_token->signature = signature;
 
-	if (!global_env->get(subprogramm_token)) {
-		global_env->put(subprogramm_token);
+	if (global) {
+		if (!global_env->get(subprogramm_token)) {
+			global_env->put(subprogramm_token);
+		}
+		else {
+			cout << endl << "TOKEN ALREADY EXIST: " << subprogramm_token->value << endl;
+			return false;
+		}
 	}
 	else {
-		cout << endl << "TOKEN ALREADY EXIST: " << subprogramm_token->value << endl;
-		return false;
-	}
+		if (!current_env->get(subprogramm_token)) {
+			current_env->put(subprogramm_token);
+		}
+		else {
+			cout << endl << "TOKEN ALREADY EXIST: " << subprogramm_token->value << endl;
+			return false;
+		}
+	}	
 
 	if (!match(new Token(")")))
 		return false;
@@ -433,7 +442,7 @@ bool Parser::parse_call_param_list(vector<Variable>& signature){
 	}
 }
 
-bool Parser::parse_var(bool global)
+bool Parser::parse_var(bool global, bool in_struct)
 {
 	Env* env;
 	Token* tmp_token;
@@ -442,22 +451,43 @@ bool Parser::parse_var(bool global)
 		env = global_env;
 	else
 		env = new Env();
-
-	if (!match(new Token("var")))
+	
+	if (!in_struct) {
+		if (!match(new Token("var")))
 			return false;
+	}	
 
 	if (current_token->type != Identificator) 
 		return false;
 
-	while (current_token->value != "begin")
+	//while (current_token->value != "begin")
+
+	vector<Token*> tmp_vars;
+	while (true)
 	{
-		vector<Token*> tmp_vars;
+		if (!in_struct) {
+			if (current_token->value == "begin")
+				break;
+		}
+		else {
+			if ((current_token->value == "end")
+				|| (current_token->value == "procedure")
+|| (current_token->value == "function"))
+break;
+		}
 
 		if (current_token->type == Identificator) {
 			current_token->check_type = Var;
 
 			if (global) {
 				if (!global_env->get(current_token)) {
+					for (Token* t : tmp_vars) {
+						if (t->value == current_token->value) {
+							cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
+							return false;
+						}
+					}
+
 					tmp_vars.push_back(current_token);
 				}
 				else {
@@ -466,15 +496,22 @@ bool Parser::parse_var(bool global)
 				}
 			}
 			else {
-				if(!env->get(current_token) && !global_env->get(current_token)) {
+				if (!env->get(current_token) && !global_env->get(current_token)) {
+					for (Token* t : tmp_vars) {
+						if (t->value == current_token->value) {
+							cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
+							return false;
+						}
+					}
+
 					tmp_vars.push_back(current_token);
 				}
 				else {
 					cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
 					return false;
-				}					
+				}
 			}
-				
+
 			if (!match(Identificator)) {
 				return false;
 			}
@@ -504,19 +541,22 @@ bool Parser::parse_var(bool global)
 								env->put(tmp_vars[i]);
 							}
 
+							tmp_vars.clear();
 							continue;
 						}
 					}
 				}
 				else
 					return false;
-			}			
-		}		
+			}
+		}
+		else
+			return false;
 	}
 
-	if (global) 
+	if (global)
 		current_env = global_env;
-	else 
+	else
 		current_env = env;
 
 	return true;
@@ -524,7 +564,65 @@ bool Parser::parse_var(bool global)
 
 bool Parser::parse_struct()
 {
-	return false;
+	CheckTokenType type;
+
+	Token* tmp = current_token;
+	if (!match(Identificator)) {
+		return false;
+	}
+	else {
+		if (global_env->get(tmp, false)) {
+			cout << endl << "TOKEN ALREADY  EXIST: " << tmp->value << endl;
+			return false;
+		}
+	}
+
+	if (!match(new Token("=")))
+		return false;
+
+	if (!match(new Token("record"), false)) {
+		if (!match(new Token("class"))) {
+			cout << endl << "EXPECTED CLASS OR RECORD: " << endl;
+			return false;
+		}
+		else
+			type = Class;
+	}
+	else
+		type = Record;
+
+	if (current_token->type == Identificator) {
+		if (!parse_var(false, true))
+			return false;
+	}
+
+	while (current_token->value != "end") {
+		if (current_token->value == "function") {
+			if (!parse_subprogramm(Function, false))
+				return false;
+		}
+		else if (current_token->value == "procedure") {
+			if (!parse_subprogramm(Procedure, false))
+				return false;
+		}
+		else {
+			cout << endl << "EXPECTED FUNCTION, PROCEDURE OR VARIABLE DECLARATION: " << endl;
+			return false;
+		}
+	}
+
+	match(new Token("end"));
+	if (!match(new Token(";"))) {
+		return false;
+	}
+	else {
+		tmp->check_type = type;
+		tmp->members = current_env;
+
+		global_env->put(tmp);
+
+		return true;
+	}
 }
 
 void Parser::save_state()

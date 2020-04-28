@@ -1,12 +1,3 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <stack>
-#include <map>
-#include <queue>
-#include <regex>
 #include "GlobalHelper.h"
 
 using namespace std; 

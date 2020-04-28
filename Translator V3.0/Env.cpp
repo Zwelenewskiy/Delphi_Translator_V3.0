@@ -80,3 +80,10 @@ bool Env::get(Token*& token, bool check_sign)
 
 	return false;
 }
+
+void Env::show()
+{
+	for (Token* token : table) {
+		cout << token->value << ": " << token->data_type << endl;
+	}
+}

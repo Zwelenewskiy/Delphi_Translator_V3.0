@@ -1,4 +1,13 @@
 #pragma once
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <stack>
+#include <map>
+#include <queue>
+#include <regex>
 using namespace std;
 
 #define IDENTIFICATOR "([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*"

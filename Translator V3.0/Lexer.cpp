@@ -1,5 +1,4 @@
 #include "Lexer.h"
-#include "GlobalHelper.h"
 
 Lexer::Lexer(string path)
 {

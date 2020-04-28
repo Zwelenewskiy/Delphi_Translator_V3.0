@@ -3,11 +3,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <stack>
-#include <map>
-#include <queue>
-#include <regex>
+#include "GlobalHelper.h"
 
 using namespace std;
 
@@ -16,6 +12,8 @@ enum  CheckTokenType
 	Var,
 	Function,
 	Procedure,
+	Class,
+	Record,
 	Undefined
 };
 
@@ -50,6 +48,8 @@ struct Variable {
 	}
 };
 
+class Env;
+
 class Token
 {
 public:
@@ -58,6 +58,7 @@ public:
 	CheckTokenType check_type;
 	vector<Variable> signature;
 	DataTypes data_type;
+	Env* members;
 
 	Token();
 	Token(string val);
