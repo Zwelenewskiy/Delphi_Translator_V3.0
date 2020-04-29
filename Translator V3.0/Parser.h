@@ -15,6 +15,8 @@ private:
 	Env* global_env = new Env();
 	Env* current_env = new Env();
 
+	Modifier current_modifier;
+
 	streampos tmp_current_file_pos;
 
 	Token* current_token;

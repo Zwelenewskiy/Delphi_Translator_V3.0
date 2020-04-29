@@ -38,6 +38,12 @@ enum TokenType
 	TypeData//8
 };
 
+enum Modifier {
+	Public,
+	Private,
+	Protected
+};
+
 struct Variable {
 	string name;
 	DataTypes data_type;
@@ -59,6 +65,7 @@ public:
 	vector<Variable> signature;
 	DataTypes data_type;
 	Env* members;
+	Modifier modifier;
 
 	Token();
 	Token(string val);

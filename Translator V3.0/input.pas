@@ -1,31 +1,23 @@
 type
-  Test = record
+  Test = record		
+  protected
 	a: integer;
+	
+  private
+	b: integer;
+
+  public
+	procedure p();
+	begin
+	end;
   
-    procedure p();
-    begin
-    end;
-    
-    function f(): char;    
-    begin      
-    end;
+  private
+	function f(): char;    
+	begin      
+	end;
   end; 
-  
-  Test1 = record
-	a: integer;
-  
-    procedure p();
-    begin
-    end;
-    
-    function f(): char;    
-    begin      
-    end;
-  end;
-  
-  procedure pr();
-  begin
-  end;
-  
+ 
+ var
+	c: integer;
 begin
 end.

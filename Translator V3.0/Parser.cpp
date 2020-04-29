@@ -298,6 +298,7 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 
 	subprogramm_token->signature = signature;
+	subprogramm_token->modifier = current_modifier;
 
 	if (global) {
 		if (!global_env->get(subprogramm_token)) {
@@ -459,10 +460,9 @@ bool Parser::parse_var(bool global, bool in_struct)
 
 	if (current_token->type != Identificator) 
 		return false;
-
-	//while (current_token->value != "begin")
-
+	
 	vector<Token*> tmp_vars;
+	bool new_vars = true;
 	while (true)
 	{
 		if (!in_struct) {
@@ -472,8 +472,37 @@ bool Parser::parse_var(bool global, bool in_struct)
 		else {
 			if ((current_token->value == "end")
 				|| (current_token->value == "procedure")
-|| (current_token->value == "function"))
-break;
+				|| (current_token->value == "function"))
+				break;
+		}
+
+		if ((to_lower(current_token->value) == "private")
+			|| (to_lower(current_token->value) == "public")
+			|| (to_lower(current_token->value) == "protected")) 
+		{
+			if (new_vars) {
+				if (to_lower(current_token->value) == "private")
+					current_modifier = Private;
+
+				if (to_lower(current_token->value) == "public")
+					current_modifier = Public;
+
+				if (to_lower(current_token->value) == "protected")
+					current_modifier = Protected;
+
+				match(new Token(current_token->value));
+			}
+			else {
+				cout << endl << "EXPECTED IDENTIFICATOR BUT: " << current_token->value << endl;
+				return false;
+			}
+		}
+
+		if (in_struct) {
+			if ((current_token->value == "end")
+				|| (current_token->value == "procedure")
+				|| (current_token->value == "function"))
+				break;
 		}
 
 		if (current_token->type == Identificator) {
@@ -538,7 +567,14 @@ break;
 								else if (data_type->value == "string")
 									tmp_vars[i]->data_type = String;
 
-								env->put(tmp_vars[i]);
+								tmp_vars[i]->modifier = current_modifier;
+
+								if(global)
+									global_env->put(tmp_vars[i]);
+								else
+									current_env->put(tmp_vars[i]);
+								
+								new_vars = true;
 							}
 
 							tmp_vars.clear();
@@ -553,11 +589,6 @@ break;
 		else
 			return false;
 	}
-
-	if (global)
-		current_env = global_env;
-	else
-		current_env = env;
 
 	return true;
 }
@@ -596,7 +627,39 @@ bool Parser::parse_struct()
 			return false;
 	}
 
-	while (current_token->value != "end") {
+	if (to_lower(current_token->value) == "private") {
+		current_modifier = Private;
+		match(new Token(current_token->value));
+	}
+	else if (to_lower(current_token->value) == "public") {
+		current_modifier = Public;
+		match(new Token(current_token->value));
+	}
+	else if (to_lower(current_token->value) == "protected") {
+		current_modifier = Protected;
+		match(new Token(current_token->value));
+	}
+
+	if (current_token->type == Identificator) {
+		if (!parse_var(false, true))
+			return false;
+	}
+
+	while (current_token->value != "end") 
+	{
+		if (to_lower(current_token->value) == "private") {
+			current_modifier = Private;
+			match(new Token(current_token->value));
+		}
+		else if (to_lower(current_token->value) == "public") {
+			current_modifier = Public;
+			match(new Token(current_token->value));
+		}
+		else if (to_lower(current_token->value) == "protected") {
+			current_modifier = Protected;
+			match(new Token(current_token->value));
+		}
+
 		if (current_token->value == "function") {
 			if (!parse_subprogramm(Function, false))
 				return false;
@@ -606,10 +669,12 @@ bool Parser::parse_struct()
 				return false;
 		}
 		else {
-			cout << endl << "EXPECTED FUNCTION, PROCEDURE OR VARIABLE DECLARATION: " << endl;
+			cout << endl << "EXPECTED FUNCTION OR PROCEDURE DECLARATION BUT FOUND: " << current_token->value <<  endl;
 			return false;
 		}
 	}
+
+	//current_env->show();
 
 	match(new Token("end"));
 	if (!match(new Token(";"))) {
@@ -663,7 +728,20 @@ bool Parser::stmt()
 		return true;
 	}
 
-	if (to_lower(current_token->value) == "function") {
+	if (to_lower(current_token->value) == "type") {
+
+		match(new Token("type"));
+
+		while ((current_token->value != "function")
+			&& (current_token->value != "procedure")
+			&& (current_token->value != "var")
+			&& (current_token->value != "begin")) {
+			if (!parse_struct()) {
+				return false;
+			}
+		}
+	}
+	else if (to_lower(current_token->value) == "function") {
 		if (!parse_subprogramm(Function))
 			return false;
 	}
@@ -819,6 +897,9 @@ bool Parser::match(TokenType token_type, bool show_error)
 	}
 }
 
-Parser::Parser(){ operator_brackets_balance = bracket_balance = 0; }
+Parser::Parser(){ 
+	operator_brackets_balance = bracket_balance = 0; 
+	current_modifier = Public;
+}
 
 Parser::~Parser(){}

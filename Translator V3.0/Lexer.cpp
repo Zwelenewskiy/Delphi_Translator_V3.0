@@ -228,7 +228,8 @@ Token* Lexer::DefineTokenType(string lexem)
 		|| (to_lower(lexem) == "object") || (to_lower(lexem) == "function") || (to_lower(lexem) == "procedure")
 		|| (to_lower(lexem) == "nil") || (to_lower(lexem) == "program") || (to_lower(lexem) == "record")
 		|| (to_lower(lexem) == "repeat") || (to_lower(lexem) == "var") || (to_lower(lexem) == "integer")
-		|| (to_lower(lexem) == "string") || (to_lower(lexem) == "boolean")) {
+		|| (to_lower(lexem) == "string") || (to_lower(lexem) == "boolean")  || (to_lower(lexem) == "private")
+		|| (to_lower(lexem) == "public") || (to_lower(lexem) == "protected")) {
 		token->type = KeyWord;
 
 		//cout << " KeyWord" << endl;
