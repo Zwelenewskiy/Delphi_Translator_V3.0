@@ -549,7 +549,36 @@ bool Parser::parse_var(bool global, bool in_struct)
 				if (match(new Token(":"))) {
 					Token* data_type = current_token;
 
-					if (match(TypeData)) {
+					if (!match(TypeData, false)) {
+						if (!is_user_datatype(current_token)) {
+							cout << endl << "EXPECTED DATATYPE BUT: " << current_token->value << endl;
+							return false;
+						}
+						else {
+							match(current_token);
+							if (!match(new Token(";"))) {
+								return false;
+							}
+							else {
+								for (int i = 0; i < tmp_vars.size(); i++) {
+
+									tmp_vars[i]->data_type = UserDataType;
+									tmp_vars[i]->modifier = current_modifier;
+
+									if (global)
+										global_env->put(tmp_vars[i]);
+									else
+										current_env->put(tmp_vars[i]);
+
+									new_vars = true;
+								}
+
+								tmp_vars.clear();
+								continue;
+							}
+						}
+					}
+					else {
 						if (!match(new Token(";"))) {
 							return false;
 						}
@@ -569,17 +598,17 @@ bool Parser::parse_var(bool global, bool in_struct)
 
 								tmp_vars[i]->modifier = current_modifier;
 
-								if(global)
+								if (global)
 									global_env->put(tmp_vars[i]);
 								else
 									current_env->put(tmp_vars[i]);
-								
+
 								new_vars = true;
 							}
 
 							tmp_vars.clear();
 							continue;
-						}
+						}					
 					}
 				}
 				else
@@ -685,6 +714,7 @@ bool Parser::parse_struct()
 		tmp->members = current_env;
 
 		global_env->put(tmp);
+		user_datatypes.push_back(tmp);
 
 		return true;
 	}
@@ -700,6 +730,16 @@ void Parser::load_state()
 {
 	lexer->current_file_pos = tmp_current_file_pos;
 	current_token = tmp_current_token;
+}
+
+bool Parser::is_user_datatype(Token * token)
+{
+	for (Token* t : user_datatypes) {
+		if (token->value == t->value)
+			return true;
+	}
+
+	return false;
 }
 
 DataTypes Parser::define_data_type(Token * token)

@@ -15,6 +15,8 @@ private:
 	Env* global_env = new Env();
 	Env* current_env = new Env();
 
+	vector<Token*> user_datatypes;
+
 	Modifier current_modifier;
 
 	streampos tmp_current_file_pos;
@@ -37,6 +39,8 @@ private:
 
 	void save_state();
 	void load_state();
+
+	bool is_user_datatype(Token* token);
 
 	DataTypes define_data_type(Token* token);
 							

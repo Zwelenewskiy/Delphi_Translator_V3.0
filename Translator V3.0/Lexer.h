@@ -14,7 +14,7 @@ enum  CheckTokenType
 	Procedure,
 	Class,
 	Record,
-	Undefined
+	UndefinedCheckTokenType
 };
 
 enum DataTypes {
@@ -22,7 +22,9 @@ enum DataTypes {
 	Double,
 	Char,
 	String,
-	Boolean
+	Boolean,
+	UserDataType,
+	UndefinedDataType
 };
 
 enum TokenType

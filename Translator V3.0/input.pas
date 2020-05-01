@@ -1,23 +1,9 @@
 type
-  Test = record		
-  protected
-	a: integer;
-	
-  private
-	b: integer;
-
-  public
-	procedure p();
-	begin
-	end;
-  
-  private
-	function f(): char;    
-	begin      
-	end;
+  Test = class		
   end; 
- 
+
  var
-	c: integer;
+	c: integer; 
 begin
+	c:= 777;
 end.

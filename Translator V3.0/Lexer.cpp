@@ -272,7 +272,8 @@ Token* Lexer::DefineTokenType(string lexem)
 }
 
 Token::Token(){
-	check_type = Undefined;
+	check_type = UndefinedCheckTokenType;
+	data_type = UndefinedDataType;
 }
 
 Token::Token(string val)
