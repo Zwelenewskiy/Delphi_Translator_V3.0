@@ -4,36 +4,42 @@ Env::Env() {}
 
 Env::~Env(){}
 
-//true, если сигнатуры разные
-//false, если сигнатуры одинаковые
+//true, если сигнатуры одинаковыеразные
+//false, если сигнатуры разные
 bool Env::check_signature(Token * token_1, Token * token_2)
 {
 	if (token_1->signature.size() != token_2->signature.size())
-		return true;
+		return false;
 	else
 	{
 		for (size_t i = 0; i < token_1->signature.size(); i++)
 		{
 			if (token_1->signature[i].data_type != token_2->signature[i].data_type)
-				return true;
+				return false;
 		}
 
-		return false;
+		return true;
 	}
 }
 
-//true, если не найдено ни одной подходящей подпрограммы
-//false, если найдена подходящая подпрограмма
-bool Env::check_signature(Token* token, vector<Variable> signature)
+//false, если не найдено ни одной подходящей подпрограммы
+//true, если найдена подходящая подпрограмма
+bool Env::check_signature(Token* token, vector<Variable> signature, Env * env)
 {
 	vector<Token*> overloaded_subprograms;
+	vector<Token*> current_table;
 
-	for (int i = 0; i < table.size(); i++) {
-		if (table[i]->value == token->value) {
-			if ((table[i]->check_type == Procedure)
-				|| (table[i]->check_type == Function))
+	if (env != nullptr)
+		current_table = env->table;
+	else
+		current_table = table;
+
+	for (int i = 0; i < current_table.size(); i++) {
+		if (current_table[i]->value == token->value) {
+			if ((current_table[i]->check_type == Procedure)
+				|| (current_table[i]->check_type == Function))
 			{
-				overloaded_subprograms.push_back(table[i]);
+				overloaded_subprograms.push_back(current_table[i]);
 			}
 		}
 	}

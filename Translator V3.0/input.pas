@@ -1,5 +1,5 @@
 type
-  Test = class
+  Test = record
 	private
 		c: char;
 	
@@ -9,11 +9,15 @@ type
   
   Test1 = class	
 	a: Test;
+	
+	procedure Proc(m: integer);
+	begin
+	end;
   end;
 
  var
 	test: Test1; 
 	b: integer;
 begin
-	test.a.a:= b;
+	b:= test.Proc(b) + 1 - 1321.99667;
 end.

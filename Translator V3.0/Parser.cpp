@@ -162,7 +162,8 @@ bool Parser::parse_expr()
 				return false;
 			}
 			else if ((type == Procedure) || (type == Function)) {
-
+				if (!parse_call(current_token))
+					return false;
 			}
 			else if (type == Var) {
 				tmp = current_token;
@@ -209,11 +210,13 @@ bool Parser::parse_expr()
 			if (!match(AriphmethicalOperator))
 				return false;
 
-			if (!match(Identificator))
-				return false;
+			if (!match(Identificator, false)) {
+				if (!match(Literal)) {
+					return false;
+				}
+			}				
 
-			if (!parse_expr())
-				return false;
+			continue;
 		}
 		else if (current_token->type == Literal) {
 			if (!match(Literal))
@@ -346,15 +349,24 @@ bool Parser::parse_call(Token* subprogram_token)
 	if (!parse_call_param_list(signature))
 		return false;
 	
-	if (global_env->check_signature(subprogram_token, signature)) {
-		cout << endl << "PARAMETERS DON'T MATCH THE SIGNATURE: " << tmp->value << endl;
-		return false;
+	if (subprogram_token->parent == nullptr) {
+		if (!global_env->check_signature(subprogram_token, signature)) {
+			cout << endl << "PARAMETERS DON'T MATCH THE SIGNATURE: " << tmp->value << endl;
+			return false;
+		}
 	}
+	else {
+		if (!global_env->check_signature(subprogram_token, signature, subprogram_token->parent->members)) {
+			cout << endl << "PARAMETERS DON'T MATCH THE SIGNATURE: " << tmp->value << endl;
+			return false;
+		}
+	}
+
 
 	if (!match(new Token(")")))
 		return false;
 
-	if (current_token->value == ";")
+	if ((current_token->value == ";") || (current_token->type == AriphmethicalOperator))
 		return true;
 	else
 		return false;
@@ -407,6 +419,7 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 	}
 	else {
 		if (!current_env->get(subprogramm_token)) {
+			subprogramm_token->parent = current_struct;
 			current_env->put(subprogramm_token);
 		}
 		else {
@@ -727,6 +740,7 @@ bool Parser::parse_struct()
 	CheckTokenType type;
 
 	Token* tmp = current_token;
+	current_struct = current_token;
 	if (!match(Identificator)) {
 		return false;
 	}
@@ -798,7 +812,7 @@ bool Parser::parse_struct()
 				return false;
 		}
 		else {
-			cout << endl << "EXPECTED FUNCTION OR PROCEDURE DECLARATION BUT FOUND: " << current_token->value <<  endl;
+			cout << endl << "EXPECTED FUNCTION OR PROCEDURE DECLARATION BUT: " << current_token->value <<  endl;
 			return false;
 		}
 	}

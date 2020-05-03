@@ -23,6 +23,8 @@ private:
 
 	Token* current_token;
 	Token* tmp_current_token;
+	Token* current_struct;
+
 	Lexer* lexer;
 
 	bool parse_expr();

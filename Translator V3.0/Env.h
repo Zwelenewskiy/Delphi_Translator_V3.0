@@ -22,7 +22,7 @@ public:
 	vector<Token*> table;
 
 	void put(Token*  token);
-	bool check_signature(Token* token, vector<Variable> signature);
+	bool check_signature(Token* token, vector<Variable> signature, Env* env = nullptr);
 	bool get(Token*& token, bool check_sign = true);
 	void show();
 };
