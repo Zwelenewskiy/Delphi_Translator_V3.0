@@ -27,6 +27,7 @@ void Parser::Parse(string path)
 		correct = parse_subprogramm(Procedure);
 	}
 	else if (current_token->value == "var") {
+		current_modifier = Public;
 		correct = parse_var();
 	}
 	else if (current_token->value != "begin") {
@@ -104,7 +105,6 @@ bool Parser::parse_expr()
 			}
 			else {
 				load_state();
-				//if (!current_env->get(current_token) && !global_env->get(current_token)) {
 				if (!global_env->get(current_token, false)) {
 					cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
 					return false;
@@ -145,8 +145,15 @@ bool Parser::parse_expr()
 			
 			for (Token* var : parent->members->table) {
 				if (var->value == current_token->value) {
-					type = var->check_type;
-					break;
+					if (var->modifier == Public) {
+						current_token = var;
+						type = var->check_type;
+						break;
+					}
+					else {
+						cout << endl << "TOKEN IS NOT PUBLIC: " << var->value << endl;
+						return false;
+					}
 				}
 			}
 
@@ -158,6 +165,7 @@ bool Parser::parse_expr()
 
 			}
 			else if (type == Var) {
+				tmp = current_token;
 				match(current_token);
 
 				if (current_token->value == ":=") {
@@ -165,7 +173,10 @@ bool Parser::parse_expr()
 					continue;
 				}
 				else if (current_token->value == ".") {
-					match(current_token);
+					parent = tmp->parent;
+					continue;
+
+					/*match(current_token);
 
 					if (current_token->type == Identificator) {
 						continue;
@@ -173,7 +184,10 @@ bool Parser::parse_expr()
 					else {
 						cout << endl << "TOKEN IS NOT A STRUCT: " << tmp->value << endl;
 						return false;
-					}
+					}*/
+				}
+				else if (current_token->value == ";") {
+					return true;
 				}
 				else {
 					cout << endl << "EXPECTED PROCEURE, FUNCTION OR VARIABLE BUT " << current_token->type << endl;
@@ -533,7 +547,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 	if (global)
 		env = global_env;
 	else
-		env = new Env();
+		current_env = new Env();
 	
 	if (!in_struct) {
 		if (!match(new Token("var")))
@@ -607,7 +621,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 				}
 			}
 			else {
-				if (!env->get(current_token) && !global_env->get(current_token)) {
+				if (!current_env->get(current_token) && !global_env->get(current_token)) {
 					for (Token* t : tmp_vars) {
 						if (t->value == current_token->value) {
 							cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
@@ -637,6 +651,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 							return false;
 						}
 						else {
+							data_type = current_token;
 							match(current_token);
 							if (!match(new Token(";"))) {
 								return false;
@@ -817,11 +832,13 @@ void Parser::load_state()
 	current_token = tmp_current_token;
 }
 
-bool Parser::is_user_datatype(Token * token)
+bool Parser::is_user_datatype(Token*& token)
 {
 	for (Token* t : user_datatypes) {
-		if (token->value == t->value)
+		if (token->value == t->value) {
+			token = t;
 			return true;
+		}
 	}
 
 	return false;
@@ -875,6 +892,8 @@ bool Parser::stmt()
 			return false;
 	}
 	else if(current_token->value == "var") {
+		current_modifier = Public;
+
 		if (!parse_var(true))
 			return false;
 	}
@@ -918,6 +937,8 @@ bool Parser::stmt()
 		return true;
 	}
 	else if (current_token->value == "var") {
+		current_modifier = Public;
+
 		if (!parse_var())
 			return false;
 	}

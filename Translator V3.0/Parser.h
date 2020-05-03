@@ -40,7 +40,7 @@ private:
 	void save_state();
 	void load_state();
 
-	bool is_user_datatype(Token* token);
+	bool is_user_datatype(Token*& token);
 
 	DataTypes define_data_type(Token* token);
 							

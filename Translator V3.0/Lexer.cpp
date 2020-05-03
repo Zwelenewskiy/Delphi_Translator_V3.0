@@ -274,6 +274,7 @@ Token* Lexer::DefineTokenType(string lexem)
 Token::Token(){
 	check_type = UndefinedCheckTokenType;
 	data_type = UndefinedDataType;
+	modifier = Public;
 }
 
 Token::Token(string val)
