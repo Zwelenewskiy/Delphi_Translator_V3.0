@@ -61,11 +61,6 @@ bool Parser::parse_expr()
 		Token* tmp = current_token;		
 
 		if (current_token->type == Identificator) {
-			/*if (!global_env->get(tmp, false)) {
-				cout << endl << "TOKEN NOT DEFINED: " << tmp->value << endl;
-				return false;
-			}*/
-
 			global_env->get(tmp, false);
 
 			if (!match(Identificator))
@@ -86,6 +81,12 @@ bool Parser::parse_expr()
 					cout << endl << "TOKEN IS NOT A STRUCT: "  << tmp->value << endl;
 					return false;
 				}
+			}
+
+			if ((current_token->type == AriphmethicalOperator)
+				|| (current_token->type == AriphmethicalOperator)) 
+			{
+				continue;
 			}
 
 			if (!match(new Token(":="), false)) {
