@@ -53,6 +53,7 @@ struct Variable {
 	Variable(string n, DataTypes t) {
 		name = n;
 		data_type = t;
+		
 	}
 };
 

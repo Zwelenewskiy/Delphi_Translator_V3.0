@@ -175,17 +175,14 @@ bool Parser::parse_expr()
 				}
 				else if (current_token->value == ".") {
 					parent = tmp->parent;
-					continue;
 
-					/*match(current_token);
-
-					if (current_token->type == Identificator) {
+					if (tmp->data_type == UserDataType) {
 						continue;
 					}
 					else {
 						cout << endl << "TOKEN IS NOT A STRUCT: " << tmp->value << endl;
 						return false;
-					}*/
+					}
 				}
 				else if (current_token->value == ";") {
 					return true;
@@ -443,7 +440,7 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 
 	if (current_token->value == "var")
-		if (!parse_var())
+		if (!parse_var(true, false))
 			return false;
 
 	if (current_token->value != "begin")
@@ -472,7 +469,8 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 				return true;
 		}
 		else {
-			if (!current_env->get(tmp_token)) {
+			if (!current_env->get(tmp_token)) { 
+				tmp_token->check_type = Var;
 				current_env->put(tmp_token);
 
 				tmp_vars.push_back(tmp_token);
@@ -533,6 +531,7 @@ bool Parser::parse_call_param_list(vector<Variable>& signature){
 		} 
 		else {
 			if (global_env->get(tmp, false)) {
+				current_env->put(tmp);
 				signature.push_back(Variable(tmp->value, tmp->data_type)); 
 			}
 			else {
@@ -978,7 +977,7 @@ bool Parser::stmt()
 	else  if (current_token->type == Identificator) {
 		save_state();
 
-		if (!current_env->get(current_token, false) && !global_env->get(current_token, false)) {
+		if (!global_env->get(current_token, false) && !current_env->get(current_token, false)) {
 			cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
 			return false;
 		}
