@@ -1,9 +1,15 @@
 type
-  Test = class		
+  Test = class
+	c: char;
+  end;
+
+  Test1 = class	
+	a, c: Test;
   end; 
 
  var
-	c: integer; 
+	test: Test1; 
+	b: integer;
 begin
-	c:= 777;
+	b:= test.a.c;
 end.

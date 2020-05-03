@@ -68,6 +68,7 @@ public:
 	DataTypes data_type;
 	Env* members;
 	Modifier modifier;
+	Token* parent;
 
 	Token();
 	Token(string val);

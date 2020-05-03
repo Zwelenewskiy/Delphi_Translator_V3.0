@@ -54,13 +54,48 @@ void Parser::Parse(string path)
 
 bool Parser::parse_expr()
 {
+	Token* parent = nullptr;
+
 	while ((current_token->value != ";") && (current_token->value != "else")) {
+		Token* tmp = current_token;		
+
 		if (current_token->type == Identificator) {
+			/*if (!global_env->get(tmp, false)) {
+				cout << endl << "TOKEN NOT DEFINED: " << tmp->value << endl;
+				return false;
+			}*/
+
+			global_env->get(tmp, false);
+
 			if (!match(Identificator))
 				return false;
 
-			if (!match(new Token(":="), false))
-				return false;
+			if (current_token->value == ".") {
+				if (tmp->data_type == UserDataType) {
+					for (Token* token : user_datatypes) {
+						if (token->value == tmp->parent->value) {
+							parent = token;
+							break;
+						}
+					}
+
+					continue;
+				}
+				else {
+					cout << endl << "TOKEN IS NOT A STRUCT: "  << tmp->value << endl;
+					return false;
+				}
+			}
+
+			if (!match(new Token(":="), false)) {
+				if (current_token->value != ";") {
+					return false;
+				}
+				else
+					return true;
+			}
+			else
+				continue;
 
 			save_state();
 			if (!match(Identificator, false)) {
@@ -69,7 +104,8 @@ bool Parser::parse_expr()
 			}
 			else {
 				load_state();
-				if (!current_env->get(current_token) && !global_env->get(current_token)) {
+				//if (!current_env->get(current_token) && !global_env->get(current_token)) {
+				if (!global_env->get(current_token, false)) {
 					cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
 					return false;
 				}
@@ -78,10 +114,10 @@ bool Parser::parse_expr()
 					if (!parse_call(current_token))
 						return false;
 				}
-				else {
+				/*else {
 					cout << endl << "EXPECTED FUNCTION: " << current_token->value << endl;
 					return false;
-				}
+				}*/
 			}
 
 			if (current_token->value == ";")
@@ -98,6 +134,52 @@ bool Parser::parse_expr()
 
 			if (!parse_expr())
 				return false;
+		}
+		else if (current_token->value == ".") {
+			match(new Token("."));
+
+			if (current_token->type != Identificator)
+				return false;
+
+			CheckTokenType type = UndefinedCheckTokenType;			
+			
+			for (Token* var : parent->members->table) {
+				if (var->value == current_token->value) {
+					type = var->check_type;
+					break;
+				}
+			}
+
+			if (type == UndefinedCheckTokenType) {
+				cout << endl << "TOKEN " << current_token->value << " IS NOT A MEMBER "<< parent->value << endl;
+				return false;
+			}
+			else if ((type == Procedure) || (type == Function)) {
+
+			}
+			else if (type == Var) {
+				match(current_token);
+
+				if (current_token->value == ":=") {
+					match(current_token);
+					continue;
+				}
+				else if (current_token->value == ".") {
+					match(current_token);
+
+					if (current_token->type == Identificator) {
+						continue;
+					}
+					else {
+						cout << endl << "TOKEN IS NOT A STRUCT: " << tmp->value << endl;
+						return false;
+					}
+				}
+				else {
+					cout << endl << "EXPECTED PROCEURE, FUNCTION OR VARIABLE BUT " << current_token->type << endl;
+					return false;
+				}
+			}
 		}
 		else if (current_token->type == LogicalOperator) {
 			if (!match(LogicalOperator))
@@ -564,6 +646,9 @@ bool Parser::parse_var(bool global, bool in_struct)
 
 									tmp_vars[i]->data_type = UserDataType;
 									tmp_vars[i]->modifier = current_modifier;
+
+									global_env->get(data_type);
+									tmp_vars[i]->parent = data_type;
 
 									if (global)
 										global_env->put(tmp_vars[i]);
