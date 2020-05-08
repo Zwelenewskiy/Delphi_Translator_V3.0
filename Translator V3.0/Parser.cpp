@@ -634,7 +634,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 				}
 			}
 			else {
-				if (!current_env->get(current_token) && !global_env->get(current_token)) {
+				if (!current_env->get(current_token, false) && !global_env->get(current_token, false)) {
 					for (Token* t : tmp_vars) {
 						if (t->value == current_token->value) {
 							cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
