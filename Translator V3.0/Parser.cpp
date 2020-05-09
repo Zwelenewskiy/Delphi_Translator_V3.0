@@ -6,6 +6,11 @@ void Parser::Parse(string path)
 	current_token = lexer->GetToken();
 
 	bool correct = true;
+	if (match(new Token("program"))) {
+			correct = match(Identificator);
+			correct = match(new Token(";"));
+	}
+
 	if (to_lower(current_token->value) == "type") {
 
 		match(new Token("type"));
@@ -1111,7 +1116,7 @@ bool Parser::stmt()
 
 bool Parser::match(Token* token, bool show_error)
 {
-	if (token->value == current_token->value) {		
+	if (to_lower(token->value) == to_lower(current_token->value)) {
 			current_token = lexer->GetToken();
 			return true;
 	}

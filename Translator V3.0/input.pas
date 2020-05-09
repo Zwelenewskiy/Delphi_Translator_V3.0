@@ -1,3 +1,5 @@
+Program  prog;
+
 type
   Test = record
 	private
