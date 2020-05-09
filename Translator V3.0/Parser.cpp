@@ -49,7 +49,7 @@ void Parser::Parse(string path)
 		if (token == nullptr)
 			break;
 
-		cout << token->value << endl;
+		cout << token->value << " " << token->line << endl;
 	}*/
 }
 
@@ -78,7 +78,7 @@ bool Parser::parse_expr()
 					continue;
 				}
 				else {
-					cout << endl << "TOKEN IS NOT A STRUCT: "  << tmp->value << endl;
+					ShowError("TOKEN IS NOT A STRUCT: " + tmp->value);
 					return false;
 				}
 			}
@@ -91,6 +91,7 @@ bool Parser::parse_expr()
 
 			if (!match(new Token(":="), false)) {
 				if (current_token->value != ";") {
+					ShowError("EXPECTED ; BUT " + current_token->value);
 					return false;
 				}
 				else
@@ -107,13 +108,15 @@ bool Parser::parse_expr()
 			else {
 				load_state();
 				if (!global_env->get(current_token, false)) {
-					cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
+					ShowError("TOKEN NOT DEFINED: " + current_token->value);
 					return false;
 				}
 
 				if (current_token->check_type == Function) {
-					if (!parse_call(current_token))
+					if (!parse_call(current_token)) {
+						ShowError("EXPECTED FUNCTION OR PROCEDURE");
 						return false;
+					}
 				}
 				/*else {
 					cout << endl << "EXPECTED FUNCTION: " << current_token->value << endl;
@@ -128,19 +131,22 @@ bool Parser::parse_expr()
 				return true;
 
 			if (!match(LogicalOperator, false)) {
-				if(!match(AriphmethicalOperator))
-					return
-						false;
+				if (!match(AriphmethicalOperator))
+					return false;
 			}
 
-			if (!parse_expr())
+			if (!parse_expr()) {
+				ShowError("EXPECTED EXPRESSION");
 				return false;
+			}
 		}
 		else if (current_token->value == ".") {
 			match(new Token("."));
 
-			if (current_token->type != Identificator)
+			if (current_token->type != Identificator) {
+				ShowError("EXPECTED IDENTIFICATOR  BUT " + current_token->type);
 				return false;
+			}
 
 			CheckTokenType type = UndefinedCheckTokenType;			
 			
@@ -163,8 +169,10 @@ bool Parser::parse_expr()
 				return false;
 			}
 			else if ((type == Procedure) || (type == Function)) {
-				if (!parse_call(current_token))
+				if (!parse_call(current_token)) {
+					ShowError("EXPECTED PROCEDURE OR FUNCTION");
 					return false;
+				}
 			}
 			else if (type == Var) {
 				tmp = current_token;
@@ -181,7 +189,7 @@ bool Parser::parse_expr()
 						continue;
 					}
 					else {
-						cout << endl << "TOKEN IS NOT A STRUCT: " << tmp->value << endl;
+						ShowError("TOKEN IS NOT A STRUCT: " + tmp->value);
 						return false;
 					}
 				}
@@ -189,24 +197,32 @@ bool Parser::parse_expr()
 					return true;
 				}
 				else {
-					cout << endl << "EXPECTED PROCEURE, FUNCTION OR VARIABLE BUT " << current_token->type << endl;
+					ShowError("EXPECTED PROCEURE, FUNCTION OR VARIABLE BUT " + current_token->type);
 					return false;
 				}
 			}
 		}
 		else if (current_token->type == LogicalOperator) {
-			if (!match(LogicalOperator))
+			if (!match(LogicalOperator)) {
+				ShowError("EXPECTED LOGICAL OPERATATOR BUT " + current_token->type);
 				return false;
+			}
 
-			if (!match(Identificator))
+			if (!match(Identificator)) {
+				ShowError("EXPECTED IDENTIFICATOR BUT " + current_token->type);
 				return false;
+			}
 
-			if (!parse_expr())
+			if (!parse_expr()) {
+				ShowError("EXPECTED EXORISSION BUT");
 				return false;
+			}
 		}
 		else if (current_token->type == AriphmethicalOperator) {
-			if (!match(AriphmethicalOperator))
+			if (!match(AriphmethicalOperator)) {
+				ShowError("EXPECTED ARIPHMETHICAL OPERTATOR BUT" + current_token->type);
 				return false;
+			}
 
 			if (!match(Identificator, false)) {
 				if (!match(Literal)) {
@@ -236,13 +252,16 @@ bool Parser::parse_expr()
 			}
 
 			if (!match(LogicalOperator, false)) {
-				if (!match(AriphmethicalOperator))
-				return
-					false;
+				if (!match(AriphmethicalOperator)) {
+					ShowError("EXPECTED ARIPHMETHICAL OPERTATOR BUT" + current_token->type);
+					return false;
+				}
 			}
 
-			if (!parse_expr())
+			if (!parse_expr()) {
+				ShowError("EXPECTED EXPRESSION");
 				return false;
+			}
 		}
 		else if (current_token->value == "(") {
 			if (!match(new Token("(")))
@@ -256,43 +275,55 @@ bool Parser::parse_expr()
 			else {
 				load_state();
 				if (!current_env->get(current_token) && !global_env->get(current_token)) {
-					cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
+					ShowError("TOKEN NOT DEFINED: " + current_token->value);
 					return false;
 				}
 
 				if (current_token->check_type == Function) {
-					if (!parse_call(current_token))
+					if (!parse_call(current_token)) {
+						ShowError("EXPECTED LOGICAL OPERTATOR BUT" + current_token->type);
 						return false;
+					}
 				}
 				else {
 					cout << endl << "EXPECTED FUNCTION: " << current_token->value << endl;
+					ShowError("EXPECTED FUNCTION BUT " + current_token->type);
 					return false;
 				}
 			}
 
 			if (!match(LogicalOperator, false)) {
-				if (!match(AriphmethicalOperator))
+				if (!match(AriphmethicalOperator)) {
+					ShowError("EXPECTED ARIPHMETHICAL OPERTATOR BUT" + current_token->type);
 					return false;
+				}
 			}
 
-			if (!parse_expr())
+			if (!parse_expr()) {
+				ShowError("EXPECTED AEXPRESSION");
 				return false;
+			}
 		}
 		else if (current_token->value == ")") {
 			if (!match(new Token(")")))
 				return false;
 
 			if (!match(LogicalOperator, false)) {
-				if (!match(AriphmethicalOperator))
-					return
-					false;
+				if (!match(AriphmethicalOperator)) {
+					ShowError("EXPECTED ARIPHMETHICAL OPERTATOR BUT" + current_token->type);
+					return false;
+				}
 			}
 
-			if (!parse_expr())
+			if (!parse_expr()) {
+				ShowError("EXPECTED EXPRESSION" + current_token->type);
 				return false;
+			}
 		}
-		else
+		else {
+		ShowError("ERROR TOKEN  " + current_token->value);
 			return false;
+		}
 	}
 
 	return true;
@@ -310,7 +341,7 @@ bool Parser::parse_bool_expr()
 		}
 
 		if (current_token->type == Identificator) {
-			if (!match(Identificator))
+			if (!match(Identificator)) 
 				return false;
 
 			if (current_token->value == ")") {
@@ -326,11 +357,15 @@ bool Parser::parse_bool_expr()
 			if (current_token->value == "(")
 				bracket_balance++;
 
-			if (!parse_bool_expr())
+			if (!parse_bool_expr()) {
+				ShowError("EXPECTED BOOLEAN EXPRESSION");
 				return false;
+			}
 		}
-		else
+		else {
+			ShowError("EXPECTED IDENTIFICATOR BUT " + current_token->value);
 			return false;
+		}
 	}
 }
 
@@ -344,18 +379,20 @@ bool Parser::parse_call(Token* subprogram_token)
 		return false;
 
 	vector<Variable> signature;
-	if (!parse_call_param_list(signature))
+	if (!parse_call_param_list(signature)) {
+		ShowError("BAD SIGNATURE PARSING");
 		return false;
+	}
 	
 	if (subprogram_token->parent == nullptr) {
 		if (!global_env->check_signature(subprogram_token, signature)) {
-			cout << endl << "PARAMETERS DON'T MATCH THE SIGNATURE: " << tmp->value << endl;
+			ShowError("PARAMETERS DON'T MATCH THE SIGNATURE: " + tmp->value);
 			return false;
 		}
 	}
 	else {
 		if (!global_env->check_signature(subprogram_token, signature, subprogram_token->parent->members)) {
-			cout << endl << "PARAMETERS DON'T MATCH THE SIGNATURE: " << tmp->value << endl;
+			ShowError("PARAMETERS DON'T MATCH THE SIGNATURE: " + tmp->value);
 			return false;
 		}
 	}
@@ -366,8 +403,10 @@ bool Parser::parse_call(Token* subprogram_token)
 
 	if ((current_token->value == ";") || (current_token->type == AriphmethicalOperator))
 		return true;
-	else
+	else {
+		ShowError("EXPECTED ; OR ARIPHMETHICAL OPERATOR");
 		return false;
+	}
 }
 
 bool Parser::parse_subprogramm(CheckTokenType type, bool global)
@@ -390,8 +429,10 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 
 	Token* subprogramm_token = current_token;
 
-	if (current_token->type != Identificator)
-		return false;	
+	if (current_token->type != Identificator) {
+		ShowError("EXPECTED IDENTIFICATOR");
+		return false;
+	}
 
 	if (!match(Identificator))
 		return false;
@@ -400,8 +441,10 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 	
 	vector<Variable> signature;
-	if (!parse_param_list(signature))
+	if (!parse_param_list(signature)) {
+		ShowError("BAD SIGNATURE PARSING");
 		return false;
+	}
 
 	subprogramm_token->signature = signature;
 	subprogramm_token->modifier = current_modifier;
@@ -411,7 +454,7 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 			global_env->put(subprogramm_token);
 		}
 		else {
-			cout << endl << "TOKEN ALREADY EXIST: " << subprogramm_token->value << endl;
+			ShowError("TOKEN ALREADY EXIST: " + subprogramm_token->value);
 			return false;
 		}
 	}
@@ -421,7 +464,7 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 			current_env->put(subprogramm_token);
 		}
 		else {
-			cout << endl << "TOKEN ALREADY EXIST: " << subprogramm_token->value << endl;
+			ShowError("TOKEN ALREADY EXIST: " + subprogramm_token->value);
 			return false;
 		}
 	}	
@@ -441,11 +484,15 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 
 	if (current_token->value == "var")
-		if (!parse_var(true, false))
+		if (!parse_var(true, false)) {
+			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
+		}
 
-	if (current_token->value != "begin")
+	if (current_token->value != "begin") {
+		ShowError("EXPECTED begin BUT " + current_token->value);
 		return false;
+	}
 
 	if (match(new Token("end"), false))
 		return true;
@@ -477,7 +524,7 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 				tmp_vars.push_back(tmp_token);
 			}
 			else {
-				cout << endl << "TOKEN NOT DEFINED: " << tmp_token->value << endl;
+				ShowError("TOKEN IS NOT DEFINED: " + tmp_token->value);
 				return false;
 			}
 		}		
@@ -507,8 +554,10 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 			continue;
 
 		if (!match(new Token(";"), false)) {
-			if (current_token->value != ")")
+			if (current_token->value != ")") {
+				ShowError("EXPECTED TOKEN ( BUT : " + current_token->value);
 				return false;
+			}
 			else
 				return true;
 		}			
@@ -523,8 +572,10 @@ bool Parser::parse_call_param_list(vector<Variable>& signature){
 			tmp = current_token;
 			if (!match(Literal, false))
 			{
-				if (current_token->value != ")")
+				if (current_token->value != ")") {
+					ShowError("EXPECTED TOKEN ) BUT: " + current_token->value);
 					return false;
+				}
 			}			
 			else {
 				signature.push_back(Variable(tmp->value, define_data_type(tmp)));
@@ -536,7 +587,7 @@ bool Parser::parse_call_param_list(vector<Variable>& signature){
 				signature.push_back(Variable(tmp->value, tmp->data_type)); 
 			}
 			else {
-				cout << endl << "TOKEN NOT DEFINED: " << tmp->value << endl;
+				ShowError("TOKEN IS NOT DEFINED: " + tmp->value);
 				return false;
 			}
 		}
@@ -567,8 +618,10 @@ bool Parser::parse_var(bool global, bool in_struct)
 			return false;
 	}	
 
-	if (current_token->type != Identificator) 
+	if (current_token->type != Identificator) {
+		ShowError("EXPECTED IDENTIFICATOR BUT: " + current_token->type);
 		return false;
+	}
 	
 	vector<Token*> tmp_vars;
 	bool new_vars = true;
@@ -621,7 +674,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 				if (!global_env->get(current_token)) {
 					for (Token* t : tmp_vars) {
 						if (t->value == current_token->value) {
-							cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
+							ShowError("TOKEN ALREADY EXIST: " + current_token->type);
 							return false;
 						}
 					}
@@ -629,7 +682,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 					tmp_vars.push_back(current_token);
 				}
 				else {
-					cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
+					ShowError("TOKEN ALREADY EXIST: " + current_token->type);
 					return false;
 				}
 			}
@@ -637,7 +690,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 				if (!current_env->get(current_token, false) && !global_env->get(current_token, false)) {
 					for (Token* t : tmp_vars) {
 						if (t->value == current_token->value) {
-							cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
+							ShowError("TOKEN ALREADY EXIST: " + current_token->type);
 							return false;
 						}
 					}
@@ -645,7 +698,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 					tmp_vars.push_back(current_token);
 				}
 				else {
-					cout << endl << "TOKEN ALREADY EXIST: " << current_token->value << endl;
+					ShowError("TOKEN ALREADY EXIST: " + current_token->type);
 					return false;
 				}
 			}
@@ -660,7 +713,7 @@ bool Parser::parse_var(bool global, bool in_struct)
 
 					if (!match(TypeData, false)) {
 						if (!is_user_datatype(current_token)) {
-							cout << endl << "EXPECTED DATATYPE BUT: " << current_token->value << endl;
+							ShowError("EXPECTED DATATYPE BUT: " + current_token->type);
 							return false;
 						}
 						else {
@@ -728,8 +781,10 @@ bool Parser::parse_var(bool global, bool in_struct)
 					return false;
 			}
 		}
-		else
+		else {
+			ShowError("EXPECTED IDENTIFICATOR BUT: " + current_token->type);
 			return false;
+		}
 	}
 
 	return true;
@@ -746,7 +801,7 @@ bool Parser::parse_struct()
 	}
 	else {
 		if (global_env->get(tmp, false)) {
-			cout << endl << "TOKEN ALREADY  EXIST: " << tmp->value << endl;
+			ShowError("TOKEN ALREADY  EXIST: " + tmp->value);
 			return false;
 		}
 	}
@@ -756,7 +811,7 @@ bool Parser::parse_struct()
 
 	if (!match(new Token("record"), false)) {
 		if (!match(new Token("class"))) {
-			cout << endl << "EXPECTED CLASS OR RECORD: " << endl;
+			ShowError("EXPECTED CLASS OR RECORD BUT: " + current_token->value);
 			return false;
 		}
 		else
@@ -766,8 +821,10 @@ bool Parser::parse_struct()
 		type = Record;
 
 	if (current_token->type == Identificator) {
-		if (!parse_var(false, true))
+		if (!parse_var(false, true)) {
+			ShowError("BAD VARIABLE  DECLARATION PARSING");
 			return false;
+		}
 	}
 
 	if (to_lower(current_token->value) == "private") {
@@ -784,8 +841,10 @@ bool Parser::parse_struct()
 	}
 
 	if (current_token->type == Identificator) {
-		if (!parse_var(false, true))
+		if (!parse_var(false, true)) {
+			ShowError("BAD VARIABLE  DECLARATION PARSING");
 			return false;
+		}
 	}
 
 	while (current_token->value != "end") 
@@ -804,20 +863,22 @@ bool Parser::parse_struct()
 		}
 
 		if (current_token->value == "function") {
-			if (!parse_subprogramm(Function, false))
+			if (!parse_subprogramm(Function, false)) {
+				ShowError("BAD FUNCTION PARSING");
 				return false;
+			}
 		}
 		else if (current_token->value == "procedure") {
-			if (!parse_subprogramm(Procedure, false))
+			if (!parse_subprogramm(Procedure, false)) {
+				ShowError("BAD PROCEDURE PARSING");
 				return false;
+			}
 		}
 		else {
-			cout << endl << "EXPECTED FUNCTION OR PROCEDURE DECLARATION BUT: " << current_token->value <<  endl;
+			ShowError("EXPECTED FUNCTION OR PROCEDURE DECLARATION BUT: " + current_token->value);
 			return false;
 		}
 	}
-
-	//current_env->show();
 
 	match(new Token("end"));
 	if (!match(new Token(";"))) {
@@ -893,23 +954,30 @@ bool Parser::stmt()
 			&& (current_token->value != "var")
 			&& (current_token->value != "begin")) {
 			if (!parse_struct()) {
+				ShowError("BAD RECORD OR CLASS PARSING");
 				return false;
 			}
 		}
 	}
 	else if (to_lower(current_token->value) == "function") {
-		if (!parse_subprogramm(Function))
+		if (!parse_subprogramm(Function)) {
+			ShowError("BAD FUNCTION PARSING");
 			return false;
+		}
 	}
 	else if(to_lower(current_token->value) == "procedure") {
-		if (!parse_subprogramm(Procedure))
+		if (!parse_subprogramm(Procedure)) {
+			ShowError("BAD PROCEDURE PARSING");
 			return false;
+		}
 	}
 	else if(current_token->value == "var") {
 		current_modifier = Public;
 
-		if (!parse_var(true))
+		if (!parse_var(true)) {
+			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
+		}
 	}
 	else if (current_token->value == "begin") {
 		operator_brackets_balance++;
@@ -935,7 +1003,7 @@ bool Parser::stmt()
 				return false;
 
 			if (current_token != nullptr) {
-				cout << endl << "EXPECTED END OF FILE" << endl;
+				ShowError("EXPECTED END OF FILE");
 				return false;
 			}
 			else
@@ -945,16 +1013,20 @@ bool Parser::stmt()
 			return false;
 	}
 	else if (current_token->value == "end") {
-		if (operator_brackets_balance == 0)
+		if (operator_brackets_balance == 0) {
+			ShowError("BAD OPERATOR BRACKETS  BALANCE");
 			return false;
+		}
 
 		return true;
 	}
 	else if (current_token->value == "var") {
 		current_modifier = Public;
 
-		if (!parse_var())
+		if (!parse_var()) {
+			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
+		}
 	}
 	else if (current_token->value == "if") {
 		if (!match(new Token("if")))
@@ -972,20 +1044,24 @@ bool Parser::stmt()
 		if (!match(new Token("then")))
 			return false;
 
-		if (!stmt())
+		if (!stmt()) {
+			ShowError("EXPECTED EXPRESSION");
 			return false;
+		}
 	}
 	else  if (current_token->type == Identificator) {
 		save_state();
 
 		if (!global_env->get(current_token, false) && !current_env->get(current_token, false)) {
-			cout << endl << "TOKEN NOT DEFINED: " << current_token->value << endl;
+			ShowError("TOKEN NOT DEFINED: " + current_token->value);
 			return false;
 		}
 
 		if (current_token->check_type == Var) {
-			if (!parse_expr())
+			if (!parse_expr()) {
+				ShowError("EXPECTED EXPRESSION");
 				return false;
+			}
 		}
 		else if ((current_token->check_type == Function) ||
 				(current_token->check_type == Procedure)) {
@@ -994,13 +1070,17 @@ bool Parser::stmt()
 		}	
 
 		if(match(new Token("else"), false)){
-			if (!stmt())
+			if (!stmt()) {
+				ShowError("EXPECTED EXPRESSION");
 				return false;
+			}
 		}
 		else if (!match(new Token(";"))) 			
 			return false;
-		else if (!stmt())
+		else if (!stmt()) {
+			ShowError("EXPECTED EXPRESSION");
 			return false;
+		}
 	}
 	else if (current_token->value == "while") {
 		if (!match(new Token("while")))
@@ -1022,6 +1102,7 @@ bool Parser::stmt()
 			return false;
 	}
 	else {
+		ShowError("ERROR  TOKEN: " + current_token->value);
 		return false;
 	}
 
@@ -1035,7 +1116,7 @@ bool Parser::match(Token* token, bool show_error)
 			return true;
 	}
 	else if(show_error){
-		cout << endl << "EXPECTED TOKEN: " << token->value << endl;
+		ShowError("EXPECTED TOKEN: " + token->value);
 		return false;
 	}
 }
@@ -1046,13 +1127,15 @@ bool Parser::match(TokenType token_type, bool show_error)
 		current_token = lexer->GetToken();
 
 		if (current_token == nullptr) {
-			cout << endl << "EXPECTED TOKEN TYPE: " << token_type << " but found the end of the file" << endl;
+			string tmp = "EXPECTED TOKEN TYPE: " + token_type;
+			tmp += " BUT FOUND END OF THE FILE";
+			ShowError(tmp);
 			return false;
 		}
 		return true;
 	}
 	else if (show_error) {
-		cout << endl << "EXPECTED TOKEN TYPE: " << token_type << endl;
+		ShowError("EXPECTED TOKEN: " + token_type);
 		return false;
 	}
 }

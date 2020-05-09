@@ -71,6 +71,8 @@ public:
 	Modifier modifier;
 	Token* parent;
 
+	int line;
+
 	Token();
 	Token(string val);
 };
@@ -83,6 +85,7 @@ private:
 
 public:
 	streampos current_file_pos;
+	int current_line;
 
 	Lexer(string path);
 	~Lexer();

@@ -3,7 +3,7 @@
 Lexer::Lexer(string path)
 {
 	PATH = path;
-	current_file_pos = 0;
+	current_file_pos = current_line = 0;
 }
 
 Lexer::~Lexer(){}
@@ -20,13 +20,18 @@ Token* Lexer::GetToken()
 
 	bool file_reading = false;
 
+	bool commet_exists = false;
+
 	ifstream file(PATH); 
 	char sim;	
 
 	if(current_file_pos != 0)
 		file.seekg(current_file_pos);
 
-	while (file.get(sim)) {
+	while (file.get(sim)) {			   
+		//if (sim == '\n')
+			//current_line++;
+
 		file_reading = true;
 
 		if (sim == '\'') {
@@ -49,6 +54,7 @@ Token* Lexer::GetToken()
 					string_reading = false;
 
 					tmp = DefineTokenType(lexem);
+					tmp->line = current_line;
 					current_file_pos = old_pos;
 					break;
 				}
@@ -71,6 +77,7 @@ Token* Lexer::GetToken()
 			space_flag = true;
 			if (lexem != "") {
 				tmp = DefineTokenType(lexem);
+				tmp->line = current_line;
 				break;
 			}
 
@@ -91,10 +98,12 @@ Token* Lexer::GetToken()
 				if (sim == '=') {
 					if (lexem != "") {
 						tmp = DefineTokenType(lexem);
+						tmp->line = current_line;
 						break;
 					}
 					else {
 						tmp = DefineTokenType(":=");
+						tmp->line = current_line;
 
 						current_file_pos = file.tellg();
 						break;
@@ -102,14 +111,17 @@ Token* Lexer::GetToken()
 				}
 				else if (lexem != "") {
 					tmp = DefineTokenType(lexem);
+					tmp->line = current_line;
 
 					file.seekg(old_pos);
 					break;
 				}else if ((lexem == "") && (isalpha(sim) ||
-						(sim == ' ') || (sim == '\n') || (sim == '\t'))) {
+						(sim == ' ') || (sim == '\n') || (sim == '\t'))) 
+				{
 					tmp = new Token();
 					tmp->type = Separator;
 					tmp->value = ":";
+					tmp->line = current_line;
 
 					current_file_pos = old_pos;
 					break;
@@ -126,6 +138,7 @@ Token* Lexer::GetToken()
 				if (sim == '=') {
 					if (lexem != "") {
 						tmp = DefineTokenType(lexem);
+						tmp->line = current_line;
 						break;
 					}
 					else {
@@ -133,6 +146,7 @@ Token* Lexer::GetToken()
 						lexem += old_sim;
 						lexem += sim;
 						tmp = DefineTokenType(lexem);
+						tmp->line = current_line;
 
 						current_file_pos = file.tellg();
 						break;
@@ -152,16 +166,19 @@ Token* Lexer::GetToken()
 					}
 					else if ((sim == '.') && !number_reading) {
 						tmp = DefineTokenType(lexem);
+						tmp->line = current_line;
 						break;
 					}
 					else {
 						tmp = DefineTokenType(lexem);
+						tmp->line = current_line;
 						break;
 					}
 				}				
 				else {
 					lexem += sim;
 					tmp = DefineTokenType(lexem);
+					tmp->line = current_line;
 
 					current_file_pos = file.tellg();
 					break;
@@ -177,6 +194,7 @@ Token* Lexer::GetToken()
 
 			if (!file.get(sim)) {
 				tmp = DefineTokenType(lexem);
+				tmp->line = current_line;
 				current_file_pos = file.tellg();
 				break;
 			}

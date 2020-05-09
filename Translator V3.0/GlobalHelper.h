@@ -8,6 +8,7 @@
 #include <map>
 #include <queue>
 #include <regex>
+#include "Lexer.h"
 using namespace std;
 
 #define IDENTIFICATOR "([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*"
@@ -37,10 +38,13 @@ struct Node//структура, описывающая узел AST-дерева
 	}
 };
 
+class Token;
+
 vector<string> InfixToPostfix(string infix, char type = 'a');
+
 bool Match_Reg(string input, string pattern);
 string to_lower(string s);
+void ShowError(string message);
 
 Node* buildATree(vector <string> postfix);
 void showMixed(Node* root, int depth);
-string get_token();
