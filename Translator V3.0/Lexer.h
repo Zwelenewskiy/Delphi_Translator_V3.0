@@ -77,6 +77,27 @@ public:
 	Token(string val);
 };
 
+class Node//узел AST-дерева
+{
+public:
+	Token* data;
+
+	Node* left;
+	Node* right;
+	Node* next;//дл€ элемента block
+
+	Node* condition;//дл€ булевого выражени€
+
+	Node()
+	{
+		data = nullptr;
+		left = nullptr;
+		right = nullptr;
+		condition = nullptr;
+		next = nullptr;
+	}
+};
+
 class Lexer
 {
 private:
