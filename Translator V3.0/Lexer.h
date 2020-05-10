@@ -80,7 +80,7 @@ public:
 class Node//узел AST-дерева
 {
 public:
-	Token* data;
+	vector<Token*> data;
 
 	Node* left;
 	Node* right;
@@ -90,7 +90,6 @@ public:
 
 	Node()
 	{
-		data = nullptr;
 		left = nullptr;
 		right = nullptr;
 		condition = nullptr;
@@ -113,4 +112,3 @@ public:
 
 	Token* GetToken();
 };
-

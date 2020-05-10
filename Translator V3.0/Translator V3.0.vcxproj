@@ -115,11 +115,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BuildingTree.cpp" />
     <ClCompile Include="Env.cpp" />
     <ClCompile Include="GlobalHelper.cpp" />
     <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="Parser.cpp" />
-    <ClCompile Include="BuildingTree.cpp" />
+    <ClCompile Include="BuildingTree.h" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>

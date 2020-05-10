@@ -3,6 +3,7 @@
 #include "Lexer.h"
 #include "Env.h"
 #include "GlobalHelper.h"
+#include "BuildingTree.h"
 
 using namespace std;
 
@@ -27,17 +28,17 @@ private:
 
 	Lexer* lexer;
 
-	bool parse_expr();
-	bool parse_bool_expr();
+	Node* parse_expr(Node* tree);
+	Node* parse_bool_expr(Node* tree);
 
-	bool parse_subprogramm(CheckTokenType type, bool global = true);
+	Node* parse_subprogramm(CheckTokenType type, Node* tree, bool global = true);
 
-	bool parse_call(Token* subprogram_token);
-	bool parse_param_list(vector<Variable>& signature);
-	bool parse_call_param_list(vector<Variable>& signature);
-	bool parse_var(bool global = false, bool in_struct = false);
+	Node* parse_call(Token* subprogram_token, Node* tree);
+	Node* parse_param_list(vector<Variable>& signature, Node* tree);
+	Node* parse_call_param_list(vector<Variable>& signature, Node* tree);
+	Node* parse_var(Node* tree, bool global = false, bool in_struct = false);
 
-	bool parse_struct();
+	Node* parse_struct(Node* tree);
 
 	void save_state();
 	void load_state();
@@ -48,10 +49,10 @@ private:
 							
 	bool match(Token* token, bool show_error = true);
 	bool match(TokenType token_type, bool show_error = true);
-	bool stmt();
+	Node* stmt(Node* tree);
 
 public:
-	void Parse(string path);
+	void Parse(string path, Node* tree);
 
 	Parser();
 	~Parser();

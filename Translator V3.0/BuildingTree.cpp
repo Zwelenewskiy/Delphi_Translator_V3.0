@@ -1,19 +1,6 @@
-#pragma once
-#include "Lexer.h"
+#include "BuildingTree.h"
 
-enum TreeType {
-	Ariphmethik,
-	Bool
-};
-
-stack<string> operation_stack;
-stack <Node*> tmp_stack;
-map<string, int> prec;//старшинство операций
-vector<Token*> postfixList;
-
-Node* builded_tree;
-
-vector<Token*> infix_to_postfix(Token* token, TreeType type)
+vector<Token*> BuildingTree::infix_to_postfix(Token* token, TreeType type)
 {
 	//определяем приоритет операций
 	if (type == Bool)// для булевских выражений
@@ -82,10 +69,10 @@ vector<Token*> infix_to_postfix(Token* token, TreeType type)
 	return postfixList;
 }
 
-void build_tree(Token* token, bool end)//функция для построения дерева
-{	
+Node*  BuildingTree::build_tree(Token* token, bool end)//функция для построения дерева
+{
 	Node* tmp = new Node();
-	tmp->data = token;
+	tmp->data.push_back(token);
 
 	if (Match_Reg(token->value, DIGIT) || Match_Reg(token->value, IDENTIFICATOR))
 	{
@@ -105,22 +92,19 @@ void build_tree(Token* token, bool end)//функция для построения дерева
 		tmp_stack.push(tmp);
 	}
 
-	if(end)
-		builded_tree = tmp_stack.top();
+	if (end)
+		return tmp_stack.top();
+	else
+		return nullptr;
 }
 
-void create_ast_tree(Token* token, TreeType type, bool end = false) {
+Node* BuildingTree::create_ast_tree(Token* token, TreeType type, bool end) {
 	infix_to_postfix(token, type);
-	build_tree(token, end);
-}
 
-void clear() {
-	while (!tmp_stack.empty())
-		tmp_stack.top();
-
-	while (!operation_stack.empty())
-		operation_stack.top();
-
-	prec.clear();
-	postfixList.clear();
+	if (end)
+		return build_tree(token, true);
+	else {
+		build_tree(token, false);
+		return nullptr;
+	}
 }

@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-void Parser::Parse(string path)
+void Parser::Parse(string path, Node* tree)
 { 
 	lexer = new Lexer(path);
 	current_token = lexer->GetToken();
@@ -19,28 +19,28 @@ void Parser::Parse(string path)
 			&& (current_token->value != "procedure")
 			&& (current_token->value != "var")
 			&& (current_token->value != "begin")) {
-			if (!parse_struct()) {
+			if (!parse_struct(tree)) {
 				correct = false;
 				break;
 			}
 		}
 	}
 	else if (to_lower(current_token->value) == "function") {
-		correct = parse_subprogramm(Function);
+		correct = parse_subprogramm(Function, tree);
 	}
 	else if (to_lower(current_token->value) == "procedure") {
-		correct = parse_subprogramm(Procedure);
+		correct = parse_subprogramm(Procedure, tree);
 	}
 	else if (current_token->value == "var") {
 		current_modifier = Public;
-		correct = parse_var();
+		correct = parse_var(tree);
 	}
 	else if (current_token->value != "begin") {
 		correct = false;
 	}
 	
 	while ((current_token != nullptr) && correct) {
-		correct = stmt();
+		correct = stmt(tree);
 	}
 
 	if(correct)
@@ -58,11 +58,14 @@ void Parser::Parse(string path)
 	}*/
 }
 
-bool Parser::parse_expr()
+Node* Parser::parse_expr(Node* tree)
 {
 	Token* parent = nullptr;
 
+	BuildingTree* builder_tree = new BuildingTree();
 	while ((current_token->value != ";") && (current_token->value != "else")) {
+		builder_tree->create_ast_tree(current_token, AriphmethicalExpr);
+
 		Token* tmp = current_token;		
 
 		if (current_token->type == Identificator) {
@@ -100,7 +103,7 @@ bool Parser::parse_expr()
 					return false;
 				}
 				else
-					return true;
+					return tree;
 			}
 			else
 				continue;
@@ -118,7 +121,7 @@ bool Parser::parse_expr()
 				}
 
 				if (current_token->check_type == Function) {
-					if (!parse_call(current_token)) {
+					if (!parse_call(current_token, tree)) {
 						ShowError("EXPECTED FUNCTION OR PROCEDURE");
 						return false;
 					}
@@ -130,17 +133,17 @@ bool Parser::parse_expr()
 			}
 
 			if (current_token->value == ";")
-				return true;
+				return tree;
 
 			if (current_token->value == "else")
-				return true;
+				return tree;
 
 			if (!match(LogicalOperator, false)) {
 				if (!match(AriphmethicalOperator))
 					return false;
 			}
 
-			if (!parse_expr()) {
+			if (!parse_expr(tree)) {
 				ShowError("EXPECTED EXPRESSION");
 				return false;
 			}
@@ -174,7 +177,7 @@ bool Parser::parse_expr()
 				return false;
 			}
 			else if ((type == Procedure) || (type == Function)) {
-				if (!parse_call(current_token)) {
+				if (!parse_call(current_token, tree)) {
 					ShowError("EXPECTED PROCEDURE OR FUNCTION");
 					return false;
 				}
@@ -199,7 +202,7 @@ bool Parser::parse_expr()
 					}
 				}
 				else if (current_token->value == ";") {
-					return true;
+					return tree;
 				}
 				else {
 					ShowError("EXPECTED PROCEURE, FUNCTION OR VARIABLE BUT " + current_token->type);
@@ -218,7 +221,7 @@ bool Parser::parse_expr()
 				return false;
 			}
 
-			if (!parse_expr()) {
+			if (!parse_expr(tree)) {
 				ShowError("EXPECTED EXORISSION BUT");
 				return false;
 			}
@@ -242,14 +245,14 @@ bool Parser::parse_expr()
 				return false;
 
 			if (current_token->value == ";")
-				return true;
+				return tree;
 
 			if (current_token->value == "else")
-				return true;
+				return tree;
 			
 			if (current_token->value == ")") {
 				if (current_token->value == ";")
-					return true;
+					return tree;
 				else {
 					match(new Token(")"));
 					continue;
@@ -263,7 +266,7 @@ bool Parser::parse_expr()
 				}
 			}
 
-			if (!parse_expr()) {
+			if (!parse_expr(tree)) {
 				ShowError("EXPECTED EXPRESSION");
 				return false;
 			}
@@ -285,7 +288,7 @@ bool Parser::parse_expr()
 				}
 
 				if (current_token->check_type == Function) {
-					if (!parse_call(current_token)) {
+					if (!parse_call(current_token, tree)) {
 						ShowError("EXPECTED LOGICAL OPERTATOR BUT" + current_token->type);
 						return false;
 					}
@@ -304,7 +307,7 @@ bool Parser::parse_expr()
 				}
 			}
 
-			if (!parse_expr()) {
+			if (!parse_expr(tree)) {
 				ShowError("EXPECTED AEXPRESSION");
 				return false;
 			}
@@ -320,7 +323,7 @@ bool Parser::parse_expr()
 				}
 			}
 
-			if (!parse_expr()) {
+			if (!parse_expr(tree)) {
 				ShowError("EXPECTED EXPRESSION" + current_token->type);
 				return false;
 			}
@@ -329,20 +332,26 @@ bool Parser::parse_expr()
 		ShowError("ERROR TOKEN  " + current_token->value);
 			return false;
 		}
+
+		if((current_token->value != ";") && (current_token->value != "else"))
+			return builder_tree->create_ast_tree(current_token, AriphmethicalExpr, true);
 	}
 
-	return true;
+	return tree;
 }
 
-bool Parser::parse_bool_expr()
+Node* Parser::parse_bool_expr(Node* tree)
 {
 	bracket_balance = 1;
+	BuildingTree* builder_tree = new BuildingTree();
 	while (bracket_balance != 0) {
+		builder_tree->create_ast_tree(current_token, AriphmethicalExpr);
+
 		Token* pred_token = current_token;
 
 		if (bracket_balance == 0) {
 			current_token = pred_token;
-			return true;
+			return tree;
 		}
 
 		if (current_token->type == Identificator) {
@@ -353,7 +362,7 @@ bool Parser::parse_bool_expr()
 				bracket_balance--;
 
 				if (bracket_balance == 0)
-					return true;
+					return tree;
 			}
 
 			if (!match(LogicalOperator, false))
@@ -362,7 +371,7 @@ bool Parser::parse_bool_expr()
 			if (current_token->value == "(")
 				bracket_balance++;
 
-			if (!parse_bool_expr()) {
+			if (!parse_bool_expr(tree)) {
 				ShowError("EXPECTED BOOLEAN EXPRESSION");
 				return false;
 			}
@@ -371,10 +380,13 @@ bool Parser::parse_bool_expr()
 			ShowError("EXPECTED IDENTIFICATOR BUT " + current_token->value);
 			return false;
 		}
+
+		if(bracket_balance == 0)
+			return builder_tree->create_ast_tree(current_token, AriphmethicalExpr, true);
 	}
 }
 
-bool Parser::parse_call(Token* subprogram_token)
+Node* Parser::parse_call(Token* subprogram_token, Node* tree)
 {
 	Token* tmp = current_token;
 	if (!match(Identificator))
@@ -384,7 +396,7 @@ bool Parser::parse_call(Token* subprogram_token)
 		return false;
 
 	vector<Variable> signature;
-	if (!parse_call_param_list(signature)) {
+	if (!parse_call_param_list(signature, tree)) {
 		ShowError("BAD SIGNATURE PARSING");
 		return false;
 	}
@@ -407,14 +419,14 @@ bool Parser::parse_call(Token* subprogram_token)
 		return false;
 
 	if ((current_token->value == ";") || (current_token->type == AriphmethicalOperator))
-		return true;
+		return tree;
 	else {
 		ShowError("EXPECTED ; OR ARIPHMETHICAL OPERATOR");
 		return false;
 	}
 }
 
-bool Parser::parse_subprogramm(CheckTokenType type, bool global)
+Node* Parser::parse_subprogramm(CheckTokenType type, Node* tree, bool global)
 {
 	if(global)
 		current_env = new Env();
@@ -446,7 +458,7 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 	
 	vector<Variable> signature;
-	if (!parse_param_list(signature)) {
+	if (!parse_param_list(signature, tree)) {
 		ShowError("BAD SIGNATURE PARSING");
 		return false;
 	}
@@ -489,7 +501,7 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 
 	if (current_token->value == "var")
-		if (!parse_var(true, false)) {
+		if (!parse_var(tree, true, false)) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
 		}
@@ -500,14 +512,14 @@ bool Parser::parse_subprogramm(CheckTokenType type, bool global)
 	}
 
 	if (match(new Token("end"), false))
-		return true;
+		return tree;
 	else {
-		if (!stmt())
+		if (!stmt(tree))
 			return false;
 	}
 }
 
-bool Parser::parse_param_list(vector<Variable>& signature)
+Node* Parser::parse_param_list(vector<Variable>& signature, Node* tree)
 {
 	Token* tmp_token;
 
@@ -519,7 +531,7 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 			if (current_token->value != ")")
 				return false; 
 			else
-				return true;
+				return tree;
 		}
 		else {
 			if (!current_env->get(tmp_token)) { 
@@ -564,12 +576,12 @@ bool Parser::parse_param_list(vector<Variable>& signature)
 				return false;
 			}
 			else
-				return true;
+				return tree;
 		}			
 	}
 }
 
-bool Parser::parse_call_param_list(vector<Variable>& signature){
+Node* Parser::parse_call_param_list(vector<Variable>& signature, Node* tree){
 	;
 	while (true) {
 		Token* tmp = current_token;
@@ -598,7 +610,7 @@ bool Parser::parse_call_param_list(vector<Variable>& signature){
 		}
 
 		if (current_token->value == ")")
-			return true;
+			return tree;
 
 		if (!match(new Token(","), false)) {
 			return false;
@@ -608,7 +620,7 @@ bool Parser::parse_call_param_list(vector<Variable>& signature){
 	}
 }
 
-bool Parser::parse_var(bool global, bool in_struct)
+Node* Parser::parse_var(Node* tree, bool global, bool in_struct)
 {
 	Env* env;
 	Token* tmp_token;
@@ -792,10 +804,10 @@ bool Parser::parse_var(bool global, bool in_struct)
 		}
 	}
 
-	return true;
+	return tree;
 }
 
-bool Parser::parse_struct()
+Node* Parser::parse_struct(Node* tree)
 {
 	CheckTokenType type;
 
@@ -896,7 +908,7 @@ bool Parser::parse_struct()
 		global_env->put(tmp);
 		user_datatypes.push_back(tmp);
 
-		return true;
+		return tree;
 	}
 }
 
@@ -944,10 +956,10 @@ DataTypes Parser::define_data_type(Token * token)
 	return DataTypes();
 }
 
-bool Parser::stmt()
+Node* Parser::stmt(Node* tree)
 {
 	if (current_token == nullptr) {
-		return true;
+		return tree;
 	}
 
 	if (to_lower(current_token->value) == "type") {
@@ -958,20 +970,20 @@ bool Parser::stmt()
 			&& (current_token->value != "procedure")
 			&& (current_token->value != "var")
 			&& (current_token->value != "begin")) {
-			if (!parse_struct()) {
+			if (!parse_struct(tree)) {
 				ShowError("BAD RECORD OR CLASS PARSING");
 				return false;
 			}
 		}
 	}
 	else if (to_lower(current_token->value) == "function") {
-		if (!parse_subprogramm(Function)) {
+		if (!parse_subprogramm(Function, tree)) {
 			ShowError("BAD FUNCTION PARSING");
 			return false;
 		}
 	}
 	else if(to_lower(current_token->value) == "procedure") {
-		if (!parse_subprogramm(Procedure)) {
+		if (!parse_subprogramm(Procedure, tree)) {
 			ShowError("BAD PROCEDURE PARSING");
 			return false;
 		}
@@ -979,7 +991,7 @@ bool Parser::stmt()
 	else if(current_token->value == "var") {
 		current_modifier = Public;
 
-		if (!parse_var(true)) {
+		if (!parse_var(tree, true)) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
 		}
@@ -990,7 +1002,7 @@ bool Parser::stmt()
 		if (!match(new Token("begin")))
 			return false;
 
-		if (!stmt())
+		if (!stmt(tree))
 			return false;	
 
 		if (!match(new Token("end"))) {
@@ -1001,7 +1013,7 @@ bool Parser::stmt()
 		}
 
 		if (match(new Token(";"), false)) {
-			return true;
+			return tree;
 		}
 		else if (match(new Token("."))) {
 			if (operator_brackets_balance != 0)
@@ -1012,7 +1024,7 @@ bool Parser::stmt()
 				return false;
 			}
 			else
-				return true;
+				return tree;
 		}
 		else
 			return false;
@@ -1023,12 +1035,12 @@ bool Parser::stmt()
 			return false;
 		}
 
-		return true;
+		return tree;
 	}
 	else if (current_token->value == "var") {
 		current_modifier = Public;
 
-		if (!parse_var()) {
+		if (!parse_var(tree)) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
 		}
@@ -1040,7 +1052,7 @@ bool Parser::stmt()
 		if (!match(new Token("("))) 
 			return false;
 
-		if (!parse_bool_expr())
+		if (!parse_bool_expr(tree))
 			return false;
 
 		if (!match(new Token(")")))
@@ -1049,7 +1061,7 @@ bool Parser::stmt()
 		if (!match(new Token("then")))
 			return false;
 
-		if (!stmt()) {
+		if (!stmt(tree)) {
 			ShowError("EXPECTED EXPRESSION");
 			return false;
 		}
@@ -1063,26 +1075,26 @@ bool Parser::stmt()
 		}
 
 		if (current_token->check_type == Var) {
-			if (!parse_expr()) {
+			if (!parse_expr(tree)) {
 				ShowError("EXPECTED EXPRESSION");
 				return false;
 			}
 		}
 		else if ((current_token->check_type == Function) ||
 				(current_token->check_type == Procedure)) {
-			if (!parse_call(current_token))
+			if (!parse_call(current_token, tree))
 				load_state();
 		}	
 
 		if(match(new Token("else"), false)){
-			if (!stmt()) {
+			if (!stmt(tree)) {
 				ShowError("EXPECTED EXPRESSION");
 				return false;
 			}
 		}
 		else if (!match(new Token(";"))) 			
 			return false;
-		else if (!stmt()) {
+		else if (!stmt(tree)) {
 			ShowError("EXPECTED EXPRESSION");
 			return false;
 		}
@@ -1094,7 +1106,7 @@ bool Parser::stmt()
 		if (!match(new Token("(")))
 			return false;
 
-		if (!parse_bool_expr())
+		if (!parse_bool_expr(tree))
 			return false;
 
 		if (!match(new Token(")")))
@@ -1103,7 +1115,7 @@ bool Parser::stmt()
 		if (!match(new Token("do")))
 			return false;
 
-		if (!stmt())
+		if (!stmt(tree))
 			return false;
 	}
 	else {
@@ -1111,7 +1123,7 @@ bool Parser::stmt()
 		return false;
 	}
 
-	return true;
+	return tree;
 }
 
 bool Parser::match(Token* token, bool show_error)

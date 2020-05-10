@@ -16,8 +16,9 @@ string const PATH = "input.pas";
 
 int main()
 {
+	Node* builded_tree = nullptr;
 	Parser* parser = new Parser();
-	parser->Parse(PATH);
+	parser->Parse(PATH, builded_tree);
 
 	system("pause");
 

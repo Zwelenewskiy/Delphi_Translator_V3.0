@@ -30,6 +30,9 @@
     <ClCompile Include="Env.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="BuildingTree.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClCompile>
     <ClCompile Include="BuildingTree.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
