@@ -77,7 +77,7 @@ public:
 	Token(string val);
 };
 
-class Node//узел AST-дерева
+struct Node//узел AST-дерева
 {
 public:
 	vector<Token*> data;

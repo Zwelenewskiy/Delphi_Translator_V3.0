@@ -1,38 +1,17 @@
 Program  prog;
 
-type
-  Test = record
-	private
-		c: char;
-	
-	public
-		a: integer;
-		
-		function Foo(m: integer): char;
-		var	
-			nnn: integer;
-		begin
-			m:= 1 + nnn;
-		end;
-  end;
-  
-  Test1 = class	
-	a: Test;
-	s: char;
-  end;
- 
-  procedure Proc(g: char);
-  var	
-	a: integer;
-  begin
-	a:= a + 1;
-  end;
- 
- var
-	test: Test1; 
-	b: integer;
+var
+	b, c: boolean;
+	d, k: integer;
 begin	
-	b:= test.a.Foo(b) - 5 +99.8;
+	if(b and c) then
+	begin
+		d:= 4 + k * c;		
+		c:= true;
+	end;	
 	
-	Proc('3');
+	d:= 5;
+	
+	if(b) then
+		k:= 4;
 end.

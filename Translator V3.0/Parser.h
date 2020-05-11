@@ -28,17 +28,17 @@ private:
 
 	Lexer* lexer;
 
-	Node* parse_expr(Node* tree);
-	Node* parse_bool_expr(Node* tree);
+	Node* parse_expr();
+	Node* parse_bool_expr();
 
-	Node* parse_subprogramm(CheckTokenType type, Node* tree, bool global = true);
+	Node* parse_subprogramm(CheckTokenType type, bool global = true);
 
-	Node* parse_call(Token* subprogram_token, Node* tree);
-	Node* parse_param_list(vector<Variable>& signature, Node* tree);
-	Node* parse_call_param_list(vector<Variable>& signature, Node* tree);
-	Node* parse_var(Node* tree, bool global = false, bool in_struct = false);
+	Node* parse_call(Token* subprogram_token);
+	Node* parse_param_list(vector<Variable>& signature);
+	Node* parse_call_param_list(vector<Variable>& signature);
+	Node* parse_var(bool global = false, bool in_struct = false);
 
-	Node* parse_struct(Node* tree);
+	Node* parse_struct();
 
 	void save_state();
 	void load_state();
@@ -49,10 +49,10 @@ private:
 							
 	bool match(Token* token, bool show_error = true);
 	bool match(TokenType token_type, bool show_error = true);
-	Node* stmt(Node* tree);
+	Node* stmt();
 
 public:
-	void Parse(string path, Node* tree);
+	void Parse(string path, Node*& tree);
 
 	Parser();
 	~Parser();
