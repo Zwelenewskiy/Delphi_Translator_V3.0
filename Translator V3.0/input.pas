@@ -4,13 +4,11 @@ var
 	b, c: boolean;
 	d, k: integer;
 begin	
-	if(c) then
-		d:= 3
-	else
+	while(b) do
 	begin
-		d:= 5;	
-		k:= d * 3;
+		d:= d + 1;
+		k:= d;
 	end;
 	
-	k:= 5;
+	k:= 4;
 end.

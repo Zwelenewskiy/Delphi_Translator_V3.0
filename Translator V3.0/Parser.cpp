@@ -1161,14 +1161,6 @@ Node* Parser::stmt()
 				load_state();
 		}	
 
-		/*if(match(new Token("else"), false)){
-			node->right = stmt();
-			if (!node->right) {
-				ShowError("EXPECTED EXPRESSION");
-				return false;
-			}
-		}
-		else*/ 
 		if (!match(new Token(";"), false)) {
 			if (current_token->value == "else")
 				return node;
@@ -1189,14 +1181,19 @@ Node* Parser::stmt()
 			
 	}
 	else if (current_token->value == "while") {
+		node->data.push_back(current_token);
+
 		if (!match(new Token("while")))
 			return false;
 
 		if (!match(new Token("(")))
 			return false;
-
-		if (!parse_bool_expr())
+		
+		node->condition = parse_bool_expr();
+		if (!node->condition) {
+			ShowError("EXPECTED BOOL EXPRESSION");
 			return false;
+		}
 
 		if (!match(new Token(")")))
 			return false;
@@ -1204,7 +1201,17 @@ Node* Parser::stmt()
 		if (!match(new Token("do")))
 			return false;
 
-		if (!stmt())
+		in_block = current_token->value == "begin";
+		
+		node->left = stmt();
+
+		if (!node->left) {
+			ShowError("EXPECTED EXPRESSION");
+			return false;
+		}
+
+		node->next = stmt();
+		if (!node->next)
 			return false;
 	}
 	else {
