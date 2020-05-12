@@ -1112,6 +1112,8 @@ Node* Parser::stmt()
 		if (!match(new Token("then")))
 			return false;
 
+		in_block = current_token->value == "begin";
+
 		node->left = stmt();
 		if (!node->left) {
 			ShowError("EXPECTED EXPRESSION");
@@ -1121,6 +1123,7 @@ Node* Parser::stmt()
 		if ((match(new Token("else"), false))) {
 			if (pred_token && (pred_token->value != ";")) 
 			{
+				in_block = current_token->value == "begin";
 				node->right = stmt();
 				if (!node->right) {
 					ShowError("EXPECTED EXPRESSION");
@@ -1158,17 +1161,25 @@ Node* Parser::stmt()
 				load_state();
 		}	
 
-		if(match(new Token("else"), false)){
+		/*if(match(new Token("else"), false)){
 			node->right = stmt();
 			if (!node->right) {
 				ShowError("EXPECTED EXPRESSION");
 				return false;
 			}
 		}
-		else if (!match(new Token(";"))) 			
-			return false;
+		else*/ 
+		if (!match(new Token(";"), false)) {
+			if (current_token->value == "else")
+				return node;
+			else
+				return false;
+		}
 		else {
-			node->next = stmt(); 
+			if (in_block)
+				node->next = stmt();
+			else
+				return node;
 			
 			if (!node->next) {
 				ShowError("EXPECTED EXPRESSION");

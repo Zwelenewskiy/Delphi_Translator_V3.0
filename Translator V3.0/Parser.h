@@ -27,6 +27,8 @@ private:
 	Token* tmp_current_token;
 	Token* current_struct;
 
+	bool in_block;
+
 	Lexer* lexer;
 
 	Node* parse_expr();

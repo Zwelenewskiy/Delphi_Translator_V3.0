@@ -6,8 +6,13 @@ var
 begin	
 	if(c) then
 	begin
-
+		d:= 3;
 	end
 	else
-		b:= 6;
+	begin
+		d:= 5;	
+		k:= d * 3;
+	end;
+	
+	k:= 5;
 end.
