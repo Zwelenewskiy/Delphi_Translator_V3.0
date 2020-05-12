@@ -5,9 +5,7 @@ var
 	d, k: integer;
 begin	
 	if(c) then
-	begin
-		d:= 3;
-	end
+		d:= 3
 	else
 	begin
 		d:= 5;	

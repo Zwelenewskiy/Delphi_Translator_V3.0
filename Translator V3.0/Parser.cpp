@@ -1121,7 +1121,7 @@ Node* Parser::stmt()
 		}
 
 		if ((match(new Token("else"), false))) {
-			if (pred_token && (pred_token->value != ";")) 
+			if (pred_token->value != ";") 
 			{
 				in_block = current_token->value == "begin";
 				node->right = stmt();
@@ -1249,6 +1249,7 @@ bool Parser::match(TokenType token_type, bool show_error)
 Parser::Parser(){ 
 	operator_brackets_balance = bracket_balance = 0; 
 	current_modifier = Public;
+	pred_token = new Token();
 }
 
 Parser::~Parser(){}
