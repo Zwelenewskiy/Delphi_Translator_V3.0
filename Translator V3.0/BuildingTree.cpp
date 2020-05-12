@@ -75,7 +75,7 @@ Node* BuildingTree::build_tree()//функция для построения дерева
 	for (int i = 0; i < postfix.size(); i++)
 	{
 		Node* tmp = new Node();
-		tmp->data.push_back(postfix[i]);
+		tmp->data = postfix[i];
 
 		if ((Match_Reg(postfix[i]->value, DIGIT) || Match_Reg(postfix[i]->value, IDENTIFICATOR))
 			&& (postfix[i]->type != AriphmethicalOperator) && (postfix[i]->type != LogicalOperator))

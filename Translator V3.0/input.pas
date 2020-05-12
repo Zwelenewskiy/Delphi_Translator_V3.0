@@ -1,12 +1,14 @@
 Program  prog;
 
 var
-	b, c: boolean;
+	b, c: boolean; 
 	d, k: integer;
 begin	
-	while(b) do
+	while(c ) do
 	begin
-		d:= d + 1;
+		while(c) do
+			d:= d + 1;
+			
 		k:= d;
 	end;
 	

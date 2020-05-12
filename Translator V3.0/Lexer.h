@@ -80,7 +80,7 @@ public:
 struct Node//узел AST-дерева
 {
 public:
-	vector<Token*> data;
+	Token* data;
 
 	Node* left;
 	Node* right;

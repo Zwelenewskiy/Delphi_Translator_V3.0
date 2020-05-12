@@ -46,7 +46,7 @@ void Parser::Parse(string path, Node*& tree)
 	}
 	
 	while (current_token && tree) {
-		tree = stmt();
+		tree->next = stmt();
 	}
 
 	if(tree)
@@ -659,18 +659,20 @@ Node* Parser::parse_call_param_list(vector<Variable>& signature){
 
 Node* Parser::parse_var(bool global, bool in_struct)
 {
-	Node* node = new Node();
+	Node* variables = new Node();
+	variables->data = current_token;
+
 	Env* env;
 
 	if (global)
 		env = global_env;
 	else
 		current_env = new Env();
-	
+
 	if (!in_struct) {
 		if (!match(new Token("var")))
 			return false;
-	}	
+	}
 
 	if (current_token->type != Identificator) {
 		ShowError("EXPECTED IDENTIFICATOR BUT: " + current_token->type);
@@ -694,7 +696,7 @@ Node* Parser::parse_var(bool global, bool in_struct)
 
 		if ((to_lower(current_token->value) == "private")
 			|| (to_lower(current_token->value) == "public")
-			|| (to_lower(current_token->value) == "protected")) 
+			|| (to_lower(current_token->value) == "protected"))
 		{
 			if (new_vars) {
 				if (to_lower(current_token->value) == "private")
@@ -762,6 +764,8 @@ Node* Parser::parse_var(bool global, bool in_struct)
 			}
 
 			if (!match(new Token(","), false)) {
+				Node* tmp = new Node();
+				tmp->data = current_token;
 				if (match(new Token(":"))) {
 					Token* data_type = current_token;
 
@@ -790,8 +794,9 @@ Node* Parser::parse_var(bool global, bool in_struct)
 									else
 										current_env->put(tmp_vars[i]);
 
-									new_vars = true;
 								}
+
+								new_vars = true;
 
 								tmp_vars.clear();
 								continue;
@@ -803,18 +808,29 @@ Node* Parser::parse_var(bool global, bool in_struct)
 							return false;
 						}
 						else {
+							tmp->right = new Node();
 							for (int i = 0; i < tmp_vars.size(); i++) {
 
-								if (data_type->value == "integer")
+								if (data_type->value == "integer") {
+									tmp->right->data = new Token("integer");
 									tmp_vars[i]->data_type = Integer;
-								else if (data_type->value == "boolean")
+								}
+								else if (data_type->value == "boolean") {
+									tmp->right->data = new Token("boolean");
 									tmp_vars[i]->data_type = Boolean;
-								else if (data_type->value == "char")
+								}
+								else if (data_type->value == "char") {
+									tmp->right->data = new Token("char");
 									tmp_vars[i]->data_type = Char;
-								else if (data_type->value == "double")
+								}
+								else if (data_type->value == "double") {
+									tmp->right->data = new Token("double");
 									tmp_vars[i]->data_type = Double;
-								else if (data_type->value == "string")
+								}
+								else if (data_type->value == "string") {
+									tmp->right->data = new Token("string");
 									tmp_vars[i]->data_type = String;
+								}
 
 								tmp_vars[i]->modifier = current_modifier;
 
@@ -823,12 +839,40 @@ Node* Parser::parse_var(bool global, bool in_struct)
 								else
 									current_env->put(tmp_vars[i]);
 
-								new_vars = true;
+								Node* t = new Node();
+								if (tmp->left != nullptr) {
+									t = tmp->left;
+									while (t->next != nullptr)
+										t = t->next;
+
+									t->next = new Node();
+									t->next->data = tmp_vars[i];
+								}			
+								else {
+									tmp->left = new Node();
+									tmp->left->data = tmp_vars[i];
+								}
+									
 							}
+
+							Node* t = new Node();
+							if (variables->next != nullptr) {
+								t = variables->next;
+								while (t->next != nullptr)
+									t = t->next;
+
+								t->next = tmp;
+							}
+							else {
+								variables->next = new Node();
+								variables->next = tmp;
+							}							
+
+							new_vars = true;
 
 							tmp_vars.clear();
 							continue;
-						}					
+						}
 					}
 				}
 				else
@@ -841,8 +885,9 @@ Node* Parser::parse_var(bool global, bool in_struct)
 		}
 	}
 
-	return node;
+	return variables;
 }
+
 
 Node* Parser::parse_struct()
 {
@@ -1042,7 +1087,7 @@ Node* Parser::stmt()
 		if (!match(new Token("begin")))
 			return false;
 
-		node->data.push_back(new Token("block"));
+		node->data = new Token("block");
 
 		node->next = stmt();
 		if (!node->next)
@@ -1095,7 +1140,7 @@ Node* Parser::stmt()
 		if (!match(new Token("if")))
 			return false;
 
-		node->data.push_back(new Token("if"));
+		node->data = new Token("if");
 
 		if (!match(new Token("("))) 
 			return false;
@@ -1181,7 +1226,7 @@ Node* Parser::stmt()
 			
 	}
 	else if (current_token->value == "while") {
-		node->data.push_back(current_token);
+		node->data = current_token;
 
 		if (!match(new Token("while")))
 			return false;
