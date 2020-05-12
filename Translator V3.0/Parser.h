@@ -23,6 +23,7 @@ private:
 	streampos tmp_current_file_pos;
 
 	Token* current_token;
+	Token* pred_token;
 	Token* tmp_current_token;
 	Token* current_struct;
 

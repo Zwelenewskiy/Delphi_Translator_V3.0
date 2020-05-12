@@ -1043,27 +1043,24 @@ Node* Parser::stmt()
 			return false;
 
 		node->data.push_back(new Token("block"));
-		
-		/*while (current_token->value != "end") {
-			node->next = stmt();
-			if (!node->next)
-				return false;
-		}*/		
 
 		node->next = stmt();
 		if (!node->next)
 			return false;
 
 		if (!match(new Token("end"))) {
-			return false;
+				return false;
 		}
 		else {
 			operator_brackets_balance--;
-		}
+		}		
 
+		pred_token = current_token;
 		if (match(new Token(";"), false)) {
 			return node;
 		}
+		else if (current_token->value == "else")
+			return node;		
 		else if (match(new Token("."))) {
 			if (operator_brackets_balance != 0)
 				return false;
@@ -1119,6 +1116,21 @@ Node* Parser::stmt()
 		if (!node->left) {
 			ShowError("EXPECTED EXPRESSION");
 			return false;
+		}
+
+		if ((match(new Token("else"), false))) {
+			if (pred_token && (pred_token->value != ";")) 
+			{
+				node->right = stmt();
+				if (!node->right) {
+					ShowError("EXPECTED EXPRESSION");
+					return false;
+				}
+			}
+			else {
+				ShowError("EXPECTED EXPRESION BUT: ELSE");
+				return false;
+			}
 		}
 
 		node->next = stmt();
