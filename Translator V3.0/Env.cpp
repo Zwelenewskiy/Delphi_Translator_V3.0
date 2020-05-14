@@ -61,25 +61,29 @@ void Env::put(Token* token)
 	table.push_back(token);
 }
 
-bool Env::get(Token*& token, bool check_sign)
+bool Env::get(Token*& token, Env* env)
 {
-	for (int i = 0; i < table.size(); i++) {
-		if (to_lower(table[i]->value) == to_lower(token->value)) {
-			//if (check_sign) {
-				if ((table[i]->check_type == Procedure)
-					|| (table[i]->check_type == Function))
-				{
-					//if (!check_signature(token, table[i])) {
-					if (!check_overloads(token, token->signature, nullptr)) {
-						token = table[i];
-						return true;
-					}
-				}
-				else {
-					token = table[i];
+	vector<Token*> current_table;
+
+	if (env == nullptr)
+		current_table = table;
+	else
+		current_table = env->table;
+
+	for (int i = 0; i < current_table.size(); i++) {
+		if (to_lower(current_table[i]->value) == to_lower(token->value)) {
+			if ((current_table[i]->check_type == Procedure)
+				|| (current_table[i]->check_type == Function))
+			{
+				if (!check_overloads(token, token->signature, env)) {
+					token = current_table[i];
 					return true;
 				}
-			//}							
+			}
+			else {
+				token = current_table[i];
+				return true;
+			}					
 		}
 	}
 

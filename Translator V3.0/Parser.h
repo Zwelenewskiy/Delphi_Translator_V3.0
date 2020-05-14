@@ -19,6 +19,7 @@ private:
 
 	Env* global_env = new Env();
 	Env* current_env = new Env();
+	Env* struct_env = new Env();
 
 	vector<Token*> user_datatypes;
 

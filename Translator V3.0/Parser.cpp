@@ -4,6 +4,7 @@ void Parser::Parse(string path, Node*& tree)
 { 
 	lexer = new Lexer(path);
 	current_token = lexer->GetToken();
+	bool correct = true;
 
 	if (match(new Token("program"))) {
 		if (!match(Identificator))
@@ -17,14 +18,36 @@ void Parser::Parse(string path, Node*& tree)
 
 		match(new Token("type"));
 
+		bool first = true;
 		while ((current_token->value != "function")
 			&& (current_token->value != "procedure")
 			&& (current_token->value != "var")
-			&& (current_token->value != "begin")) {
-			if (!parse_struct()) {
-				tree = false;
-				break;
+			&& (current_token->value != "begin"))
+		{	
+
+			if (first) {
+				first = false;
+				tree = parse_struct();
+			}			
+			else {
+				Node* tmp = new Node();
+
+				if(!tree->next)
+					tree->next = parse_struct();
+				else {
+					while (tmp->next)
+						tmp = tmp->next;
+
+					tmp->next = parse_struct();
+				}				
 			}
+
+			/*tree = parse_struct();
+			if (!tree) {
+				ShowError("EXPECTED TYPE");
+				correct = false;
+				break;
+			}*/
 		}
 	}
 	else if (to_lower(current_token->value) == "function") {
@@ -41,15 +64,14 @@ void Parser::Parse(string path, Node*& tree)
 		tree = false;
 	}
 	
-	bool correct = true;
 	while (current_token && tree && correct) {
 		Node* node = new Node();
-		if (tree->next == nullptr) {
+		if (!tree->next) {
 			tree->next = stmt();
 		}
 		else {
 			node = tree->next;
-			while (node->next != nullptr)
+			while (node->next)
 				node = node->next;
 
 			node->next = stmt();
@@ -86,7 +108,7 @@ Node* Parser::parse_expr()
 
 		tmp = current_token;
 		if (current_token->type == Identificator) {
-			global_env->get(tmp, false);
+			global_env->get(tmp);
 
 			builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
 
@@ -141,7 +163,7 @@ Node* Parser::parse_expr()
 			}
 			else {
 				load_state();
-				if (!global_env->get(current_token, false)) {
+				if (!global_env->get(current_token)) {
 					ShowError("TOKEN NOT DEFINED: " + current_token->value);
 					return false;
 				}
@@ -516,7 +538,7 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 	node->data->signature = signature;
 
 	if (global) {
-		if (!global_env->get(subprogramm_token, true)) {
+		if (!global_env->get(subprogramm_token)) {
 			global_env->put(subprogramm_token);
 		}
 		else {
@@ -525,9 +547,9 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 		}
 	}
 	else {
-		if (!current_env->get(subprogramm_token, true)) {
+		if (!current_env->get(subprogramm_token, struct_env)) {
 			subprogramm_token->parent = current_struct;
-			current_env->put(subprogramm_token);
+			struct_env->put(subprogramm_token);
 		}
 		else {
 			ShowError("TOKEN ALREADY EXIST: " + subprogramm_token->value);
@@ -549,12 +571,13 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 	if (!match(new Token(";")))
 		return false;
 
-	if (current_token->value == "var")
+	if (current_token->value == "var") {
 		node->left = parse_var(false, false);
 		if (!node->left) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
 		}
+	}		
 		 
 	if (current_token->value != "begin") {
 		ShowError("EXPECTED begin BUT " + current_token->value);
@@ -591,7 +614,7 @@ Node* Parser::parse_call_param_list(vector<Variable>& signature){
 			}
 		} 
 		else {
-			if (global_env->get(tmp, false)) {
+			if (global_env->get(tmp)) {
 				current_env->put(tmp);
 				signature.push_back(Variable(tmp->value, tmp->data_type)); 
 			}
@@ -612,10 +635,10 @@ Node* Parser::parse_call_param_list(vector<Variable>& signature){
 	}
 }
 
-Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variable>& signature, bool parse_signature )
+Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variable>& signature, bool parse_signature)
 {
 	Node* variables = new Node();
-	variables->data = current_token;
+	variables->data = new Token("var");
 
 	Env* env;
 
@@ -628,8 +651,9 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 		if (!match(new Token("var")))
 			return false;
 	}
-
-	if (current_token->type != Identificator) {
+	if (current_token->value == ")")
+		return variables;
+	else if (current_token->type != Identificator) {
 		ShowError("EXPECTED IDENTIFICATOR BUT: " + current_token->type);
 		return false;
 	}
@@ -702,7 +726,8 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 				}
 			}
 			else {
-				if (!current_env->get(current_token, false) && !global_env->get(current_token, false)) {
+				//if (!current_env->get(current_token) && !global_env->get(current_token)) {
+				if (!current_env->get(current_token)) {
 					for (Token* t : tmp_vars) {
 						if (t->value == current_token->value) {
 							ShowError("TOKEN ALREADY EXIST: " + current_token->value);
@@ -766,10 +791,23 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 						}
 					}
 					else {
-						if (!parse_signature && !match(new Token(";"))) {
+						if (parse_signature) {
+							if (!match(new Token(";"), false)) {
+								if (current_token->value != ")") {
+									return false;
+								}
+							}
+						}
+						else {
+							if (!match(new Token(";"))) {
+								return false;
+							}
+						}
+
+						/*if (!parse_signature && !match(new Token(";"))) { 
 							return false;
 						}		
-						else {
+						else {*/
 							tmp->right = new Node();
 							for (int i = 0; i < tmp_vars.size(); i++) {
 
@@ -844,7 +882,7 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 
 							tmp_vars.clear();
 							continue;
-						}
+						//}
 					}
 				}
 				else
@@ -865,13 +903,15 @@ Node* Parser::parse_struct()
 	Node* node = new Node();
 	CheckTokenType type;
 
+	struct_env = new Env();
+
 	Token* tmp = current_token;
 	current_struct = current_token;
 	if (!match(Identificator)) {
 		return false;
 	}
 	else {
-		if (global_env->get(tmp, false)) {
+		if (global_env->get(tmp)) {
 			ShowError("TOKEN ALREADY  EXIST: " + tmp->value);
 			return false;
 		}
@@ -880,6 +920,7 @@ Node* Parser::parse_struct()
 	if (!match(new Token("=")))
 		return false;
 
+	node->data = current_token;
 	if (!match(new Token("record"), false)) {
 		if (!match(new Token("class"))) {
 			ShowError("EXPECTED CLASS OR RECORD BUT: " + current_token->value);
@@ -891,12 +932,12 @@ Node* Parser::parse_struct()
 	else
 		type = Record;
 
-	if (current_token->type == Identificator) {
+	/*if (current_token->type == Identificator) {
 		if (!parse_var(false, true)) {
 			ShowError("BAD VARIABLE  DECLARATION PARSING");
 			return false;
 		}
-	}
+	}*/
 
 	if (to_lower(current_token->value) == "private") {
 		current_modifier = Private;
@@ -912,14 +953,18 @@ Node* Parser::parse_struct()
 	}
 
 	if (current_token->type == Identificator) {
-		if (!parse_var(false, true)) {
-			ShowError("BAD VARIABLE  DECLARATION PARSING");
+		node->left = parse_var(false, true, true);
+
+		if (!node->left) {
+			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
 		}
 	}
 
 	while (current_token->value != "end") 
 	{
+		Node* tmp = new Node();
+
 		if (to_lower(current_token->value) == "private") {
 			current_modifier = Private;
 			match(new Token(current_token->value));
@@ -934,13 +979,15 @@ Node* Parser::parse_struct()
 		}
 
 		if (current_token->value == "function") {
-			if (!parse_subprogramm(Function, false)) {
+			tmp = parse_subprogramm(Function, false);
+			if (!tmp) {
 				ShowError("BAD FUNCTION PARSING");
 				return false;
 			}
 		}
 		else if (current_token->value == "procedure") {
-			if (!parse_subprogramm(Procedure, false)) {
+			tmp = parse_subprogramm(Procedure, false);
+			if (!tmp) {
 				ShowError("BAD PROCEDURE PARSING");
 				return false;
 			}
@@ -949,7 +996,18 @@ Node* Parser::parse_struct()
 			ShowError("EXPECTED FUNCTION OR PROCEDURE DECLARATION BUT: " + current_token->value);
 			return false;
 		}
-	}
+
+		Node* t = new Node();
+		if (node->right == nullptr)
+			node->right = tmp;
+		else {
+			t = node->right;
+			while (t->next != nullptr)
+				t = t->next;
+
+			t->next = tmp;
+		}
+	}	
 
 	match(new Token("end"));
 	if (!match(new Token(";"))) {
@@ -1048,14 +1106,6 @@ Node* Parser::stmt()
 			return false;
 		}
 	}
-	/*else if(current_token->value == "var") {
-		current_modifier = Public;
-
-		if (!parse_var(true)) {
-			ShowError("BAD VARIABLE DECLARATION PARSING");
-			return false;
-		}
-	}*/
 	else if (current_token->value == "begin") {
 		operator_brackets_balance++;
 
@@ -1164,7 +1214,7 @@ Node* Parser::stmt()
 	else  if (current_token->type == Identificator) {
 		save_state();
 
-		if (!global_env->get(current_token, false) && !current_env->get(current_token, false)) {
+		if (!global_env->get(current_token) && !current_env->get(current_token)) {
 			ShowError("TOKEN NOT DEFINED: " + current_token->value);
 			return false;
 		}
