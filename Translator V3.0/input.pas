@@ -8,11 +8,18 @@ begin
 end;
 
 procedure Proc(g: char);
-  var	
-	a: integer;
-  begin
-	a:= a + 1;
-  end;
+var	
+a: integer;
+begin
+a:= a + 1;
+end;
+
+function Foo(m: char): char;
+var	
+	nnn: integer;
+begin
+	m := 1 + nnn;
+end;
 
 var
 	b, c: boolean; 

@@ -5,16 +5,12 @@ void Parser::Parse(string path, Node*& tree)
 	lexer = new Lexer(path);
 	current_token = lexer->GetToken();
 
-	//bool correct = true;
 	if (match(new Token("program"))) {
 		if (!match(Identificator))
 			tree = nullptr;
 
 		if(!match(new Token(";")))
 			tree = nullptr;
-
-		/*node = match(Identificator);
-		node = match(new Token(";"));*/
 	}
 
 	if (to_lower(current_token->value) == "type") {
@@ -45,7 +41,8 @@ void Parser::Parse(string path, Node*& tree)
 		tree = false;
 	}
 	
-	while (current_token && tree) {
+	bool correct = true;
+	while (current_token && tree && correct) {
 		Node* node = new Node();
 		if (tree->next == nullptr) {
 			tree->next = stmt();
@@ -56,10 +53,13 @@ void Parser::Parse(string path, Node*& tree)
 				node = node->next;
 
 			node->next = stmt();
+
+			if (!node->next)
+				correct = false;
 		}
 	}
 
-	if(tree)
+	if(correct)
 		cout << endl << "SYNTAX IS OK" << endl;
 	else
 		cout << endl << "SYNTAX ERROR" << endl;
@@ -445,13 +445,13 @@ Node* Parser::parse_call(Token* subprogram_token)
 	}
 	
 	if (subprogram_token->parent == nullptr) {
-		if (!global_env->check_signature(subprogram_token, signature)) {
+		if (!global_env->check_overloads(subprogram_token, signature)) {
 			ShowError("PARAMETERS DON'T MATCH THE SIGNATURE: " + tmp->value);
 			return false;
 		}
 	}
 	else {
-		if (!global_env->check_signature(subprogram_token, signature, subprogram_token->parent->members)) {
+		if (!global_env->check_overloads(subprogram_token, signature, subprogram_token->parent->members)) {
 			ShowError("PARAMETERS DON'T MATCH THE SIGNATURE: " + tmp->value);
 			return false;
 		}
@@ -505,7 +505,7 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 	
 	vector<Variable> signature;
 			
-	if (!parse_var(false, true, signature, true)) {
+	if (!parse_var(false, true, true, signature, true)) {
 		ShowError("BAD SIGNATURE PARSING");
 		return false;
 	}
@@ -516,7 +516,7 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 	node->data->signature = signature;
 
 	if (global) {
-		if (!global_env->get(subprogramm_token)) {
+		if (!global_env->get(subprogramm_token, true)) {
 			global_env->put(subprogramm_token);
 		}
 		else {
@@ -525,7 +525,7 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 		}
 	}
 	else {
-		if (!current_env->get(subprogramm_token)) {
+		if (!current_env->get(subprogramm_token, true)) {
 			subprogramm_token->parent = current_struct;
 			current_env->put(subprogramm_token);
 		}
@@ -550,7 +550,7 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 
 	if (current_token->value == "var")
-		node->left = parse_var(true, false);
+		node->left = parse_var(false, false);
 		if (!node->left) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
@@ -612,7 +612,7 @@ Node* Parser::parse_call_param_list(vector<Variable>& signature){
 	}
 }
 
-Node* Parser::parse_var(bool global, bool in_struct, vector<Variable>& signature, bool parse_signature)
+Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variable>& signature, bool parse_signature )
 {
 	Node* variables = new Node();
 	variables->data = current_token;
@@ -621,7 +621,7 @@ Node* Parser::parse_var(bool global, bool in_struct, vector<Variable>& signature
 
 	if (global)
 		env = global_env;
-	else
+	else if(new_env)
 		current_env = new Env();
 
 	if (!in_struct) {

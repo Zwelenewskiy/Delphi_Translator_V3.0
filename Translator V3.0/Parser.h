@@ -36,13 +36,13 @@ private:
 	Lexer* lexer;
 
 	Node* parse_expr();
-	Node* parse_bool_expr();
+	Node* parse_bool_expr();	
 
 	Node* parse_subprogramm(CheckTokenType type, bool global = true);
 
 	Node* parse_call(Token* subprogram_token);
 	Node* parse_call_param_list(vector<Variable>& signature);
-	Node* parse_var(bool global = false, bool in_struct = false, vector<Variable>& signature = empty_vector, bool parse_signature = false);
+	Node* parse_var(bool global = false, bool in_struct = false, bool new_env = false, vector<Variable>& signature = empty_vector, bool parse_signature = false);
 
 	Node* parse_struct();
 
