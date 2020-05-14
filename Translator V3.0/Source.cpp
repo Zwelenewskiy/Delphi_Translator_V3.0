@@ -1,12 +1,5 @@
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <vector>
-#include <sstream>
-#include <stack>
-#include <map>
-#include <queue>
-#include <regex>
 #include "GlobalHelper.h"
 #include "Parser.h"
 

@@ -1,10 +1,24 @@
 Program  prog;
 
+function Foo(m: integer): char;
+var	
+	nnn: integer;
+begin
+	m := 1 + nnn;
+end;
+
+procedure Proc(g: char);
+  var	
+	a: integer;
+  begin
+	a:= a + 1;
+  end;
+
 var
 	b, c: boolean; 
 	d, k: integer;
 begin	
-	while(c ) do
+	while(c) do
 	begin
 		while(c) do
 			d:= d + 1;

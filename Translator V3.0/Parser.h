@@ -7,6 +7,10 @@
 
 using namespace std;
 
+namespace {
+	auto empty_vector = vector<Variable>();
+}
+
 class Parser
 {
 private:
@@ -37,9 +41,8 @@ private:
 	Node* parse_subprogramm(CheckTokenType type, bool global = true);
 
 	Node* parse_call(Token* subprogram_token);
-	Node* parse_param_list(vector<Variable>& signature);
 	Node* parse_call_param_list(vector<Variable>& signature);
-	Node* parse_var(bool global = false, bool in_struct = false);
+	Node* parse_var(bool global = false, bool in_struct = false, vector<Variable>& signature = empty_vector, bool parse_signature = false);
 
 	Node* parse_struct();
 

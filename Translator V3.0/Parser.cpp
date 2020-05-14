@@ -46,7 +46,17 @@ void Parser::Parse(string path, Node*& tree)
 	}
 	
 	while (current_token && tree) {
-		tree->next = stmt();
+		Node* node = new Node();
+		if (tree->next == nullptr) {
+			tree->next = stmt();
+		}
+		else {
+			node = tree->next;
+			while (node->next != nullptr)
+				node = node->next;
+
+			node->next = stmt();
+		}
 	}
 
 	if(tree)
@@ -466,6 +476,7 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 	if(global)
 		current_env = new Env();
 
+	node->data = current_token;
 	if (type == Function) {
 		if (!match(new Token("function")))
 			return false;
@@ -493,13 +504,16 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 	
 	vector<Variable> signature;
-	if (!parse_param_list(signature)) {
+			
+	if (!parse_var(false, true, signature, true)) {
 		ShowError("BAD SIGNATURE PARSING");
 		return false;
 	}
 
 	subprogramm_token->signature = signature;
 	subprogramm_token->modifier = current_modifier;
+
+	node->data->signature = signature;
 
 	if (global) {
 		if (!global_env->get(subprogramm_token)) {
@@ -536,11 +550,12 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 
 	if (current_token->value == "var")
-		if (!parse_var(true, false)) {
+		node->left = parse_var(true, false);
+		if (!node->left) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
 		}
-
+		 
 	if (current_token->value != "begin") {
 		ShowError("EXPECTED begin BUT " + current_token->value);
 		return false;
@@ -549,72 +564,12 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 	if (match(new Token("end"), false))
 		return node;
 	else {
-		if (!stmt())
+		node->right = stmt();
+		if (!node->right)
 			return false;
 	}
-}
 
-Node* Parser::parse_param_list(vector<Variable>& signature)
-{
-	Node* node = new Node();
-	Token* tmp_token;
-
-	while (true) {
-		vector<Token*> tmp_vars;
-		tmp_token = current_token;
-
-		if (!match(Identificator, false)) {
-			if (current_token->value != ")")
-				return false; 
-			else
-				return node;
-		}
-		else {
-			if (!current_env->get(tmp_token)) { 
-				tmp_token->check_type = Var;
-				current_env->put(tmp_token);
-
-				tmp_vars.push_back(tmp_token);
-			}
-			else {
-				ShowError("TOKEN IS NOT DEFINED: " + tmp_token->value);
-				return false;
-			}
-		}		
-
-		if (!match(new Token(","), false)) {
-			if (match(new Token(":"))) {
-				Token* data_type = current_token;
-				if (!match(TypeData))
-					return false;
-				else {
-					for (int i = 0; i < tmp_vars.size(); i++) {
-						if(data_type->value == "integer")
-							signature.push_back(Variable(tmp_vars[i]->value, Integer));
-						else if (data_type->value == "boolean")
-							signature.push_back(Variable(tmp_vars[i]->value, Boolean));
-						else if (data_type->value == "char")
-							signature.push_back(Variable(tmp_vars[i]->value, Char));
-						else if (data_type->value == "double")
-							signature.push_back(Variable(tmp_vars[i]->value, Double));
-						else if (data_type->value == "string")
-							signature.push_back(Variable(tmp_vars[i]->value, String));
-					}
-				}
-			}
-		}
-		else
-			continue;
-
-		if (!match(new Token(";"), false)) {
-			if (current_token->value != ")") {
-				ShowError("EXPECTED TOKEN ( BUT : " + current_token->value);
-				return false;
-			}
-			else
-				return node;
-		}			
-	}
+	return node;
 }
 
 Node* Parser::parse_call_param_list(vector<Variable>& signature){
@@ -657,7 +612,7 @@ Node* Parser::parse_call_param_list(vector<Variable>& signature){
 	}
 }
 
-Node* Parser::parse_var(bool global, bool in_struct)
+Node* Parser::parse_var(bool global, bool in_struct, vector<Variable>& signature, bool parse_signature)
 {
 	Node* variables = new Node();
 	variables->data = current_token;
@@ -684,7 +639,11 @@ Node* Parser::parse_var(bool global, bool in_struct)
 	while (true)
 	{
 		if (!in_struct) {
-			if (current_token->value == "begin")
+			if ((current_token->value == "begin"))
+				break;
+		}
+		else if (parse_signature) {
+			if ((current_token->value == ")"))
 				break;
 		}
 		else {
@@ -777,9 +736,10 @@ Node* Parser::parse_var(bool global, bool in_struct)
 						else {
 							data_type = current_token;
 							match(current_token);
-							if (!match(new Token(";"))) {
+
+							if (!parse_signature && !match(new Token(";"))) {
 								return false;
-							}
+							}			
 							else {
 								for (int i = 0; i < tmp_vars.size(); i++) {
 
@@ -788,6 +748,8 @@ Node* Parser::parse_var(bool global, bool in_struct)
 
 									global_env->get(data_type);
 									tmp_vars[i]->parent = data_type;
+
+									signature.push_back((Variable(tmp_vars[i]->value, UserDataType)));
 
 									if (global)
 										global_env->put(tmp_vars[i]);
@@ -804,9 +766,9 @@ Node* Parser::parse_var(bool global, bool in_struct)
 						}
 					}
 					else {
-						if (!match(new Token(";"))) {
+						if (!parse_signature && !match(new Token(";"))) {
 							return false;
-						}
+						}		
 						else {
 							tmp->right = new Node();
 							for (int i = 0; i < tmp_vars.size(); i++) {
@@ -814,22 +776,32 @@ Node* Parser::parse_var(bool global, bool in_struct)
 								if (data_type->value == "integer") {
 									tmp->right->data = new Token("integer");
 									tmp_vars[i]->data_type = Integer;
+
+									signature.push_back((Variable(tmp_vars[i]->value, Integer)));
 								}
 								else if (data_type->value == "boolean") {
 									tmp->right->data = new Token("boolean");
 									tmp_vars[i]->data_type = Boolean;
+
+									signature.push_back((Variable(tmp_vars[i]->value, Boolean)));
 								}
 								else if (data_type->value == "char") {
 									tmp->right->data = new Token("char");
 									tmp_vars[i]->data_type = Char;
+
+									signature.push_back((Variable(tmp_vars[i]->value, Char)));
 								}
 								else if (data_type->value == "double") {
 									tmp->right->data = new Token("double");
 									tmp_vars[i]->data_type = Double;
+
+									signature.push_back((Variable(tmp_vars[i]->value, Double)));
 								}
 								else if (data_type->value == "string") {
 									tmp->right->data = new Token("string");
 									tmp_vars[i]->data_type = String;
+
+									signature.push_back((Variable(tmp_vars[i]->value, String)));
 								}
 
 								tmp_vars[i]->modifier = current_modifier;
@@ -856,16 +828,16 @@ Node* Parser::parse_var(bool global, bool in_struct)
 							}
 
 							Node* t = new Node();
-							if (variables->next != nullptr) {
-								t = variables->next;
+							if (variables->left != nullptr) {
+								t = variables->left;
 								while (t->next != nullptr)
 									t = t->next;
 
 								t->next = tmp;
 							}
 							else {
-								variables->next = new Node();
-								variables->next = tmp;
+								variables->left = new Node();
+								variables->left = tmp;
 							}							
 
 							new_vars = true;
@@ -887,7 +859,6 @@ Node* Parser::parse_var(bool global, bool in_struct)
 
 	return variables;
 }
-
 
 Node* Parser::parse_struct()
 {
@@ -1062,25 +1033,29 @@ Node* Parser::stmt()
 		}
 	}
 	else if (to_lower(current_token->value) == "function") {
-		if (!parse_subprogramm(Function)) {
+		node = parse_subprogramm(Function);
+
+		if (!node) {
 			ShowError("BAD FUNCTION PARSING");
 			return false;
 		}
 	}
 	else if(to_lower(current_token->value) == "procedure") {
-		if (!parse_subprogramm(Procedure)) {
+		node = parse_subprogramm(Procedure);
+
+		if (!node) {
 			ShowError("BAD PROCEDURE PARSING");
 			return false;
 		}
 	}
-	else if(current_token->value == "var") {
+	/*else if(current_token->value == "var") {
 		current_modifier = Public;
 
 		if (!parse_var(true)) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
 		}
-	}
+	}*/
 	else if (current_token->value == "begin") {
 		operator_brackets_balance++;
 
@@ -1089,8 +1064,8 @@ Node* Parser::stmt()
 
 		node->data = new Token("block");
 
-		node->next = stmt();
-		if (!node->next)
+		node->left = stmt();
+		if (!node->left)
 			return false;
 
 		if (!match(new Token("end"))) {
@@ -1131,7 +1106,8 @@ Node* Parser::stmt()
 	else if (current_token->value == "var") {
 		current_modifier = Public;
 
-		if (!parse_var()) {
+		node = parse_var();
+		if (!node) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
 		}
