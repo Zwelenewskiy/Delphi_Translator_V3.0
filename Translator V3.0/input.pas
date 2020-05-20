@@ -55,6 +55,7 @@ end;
 var
 	b, c: boolean; 
 	d, k: integer;
+	t: char;
 begin	
 	while(c) do
 	begin

@@ -726,7 +726,6 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 				}
 			}
 			else {
-				//if (!current_env->get(current_token) && !global_env->get(current_token)) {
 				if (!current_env->get(current_token)) {
 					for (Token* t : tmp_vars) {
 						if (t->value == current_token->value) {
@@ -761,15 +760,18 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 						else {
 							data_type = current_token;
 							match(current_token);
-
+							 
 							if (!parse_signature && !match(new Token(";"))) {
 								return false;
 							}			
 							else {
+								tmp->right = new Node();
 								for (int i = 0; i < tmp_vars.size(); i++) {
 
 									tmp_vars[i]->data_type = UserDataType;
 									tmp_vars[i]->modifier = current_modifier;
+
+									tmp->right->data = new Token("UserDataType");
 
 									global_env->get(data_type);
 									tmp_vars[i]->parent = data_type;
@@ -781,6 +783,32 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 									else
 										current_env->put(tmp_vars[i]);
 
+									Node* t = new Node();
+									if (tmp->left != nullptr) {
+										t = tmp->left;
+										while (t->next != nullptr)
+											t = t->next;
+
+										t->next = new Node();
+										t->next->data = tmp_vars[i];
+									}
+									else {
+										tmp->left = new Node();
+										tmp->left->data = tmp_vars[i];
+									}
+								}
+
+								Node* t = new Node();
+								if (variables->left != nullptr) {
+									t = variables->left;
+									while (t->next != nullptr)
+										t = t->next;
+
+									t->next = tmp;
+								}
+								else {
+									variables->left = new Node();
+									variables->left = tmp;
 								}
 
 								new_vars = true;
@@ -804,85 +832,79 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 							}
 						}
 
-						/*if (!parse_signature && !match(new Token(";"))) { 
-							return false;
-						}		
-						else {*/
-							tmp->right = new Node();
-							for (int i = 0; i < tmp_vars.size(); i++) {
+						tmp->right = new Node();
+						for (int i = 0; i < tmp_vars.size(); i++) {
 
-								if (data_type->value == "integer") {
-									tmp->right->data = new Token("integer");
-									tmp_vars[i]->data_type = Integer;
+							if (data_type->value == "integer") {
+								tmp->right->data = new Token("integer");
+								tmp_vars[i]->data_type = Integer;
 
-									signature.push_back((Variable(tmp_vars[i]->value, Integer)));
-								}
-								else if (data_type->value == "boolean") {
-									tmp->right->data = new Token("boolean");
-									tmp_vars[i]->data_type = Boolean;
+								signature.push_back((Variable(tmp_vars[i]->value, Integer)));
+							}
+							else if (data_type->value == "boolean") {
+								tmp->right->data = new Token("boolean");
+								tmp_vars[i]->data_type = Boolean;
 
-									signature.push_back((Variable(tmp_vars[i]->value, Boolean)));
-								}
-								else if (data_type->value == "char") {
-									tmp->right->data = new Token("char");
-									tmp_vars[i]->data_type = Char;
+								signature.push_back((Variable(tmp_vars[i]->value, Boolean)));
+							}
+							else if (data_type->value == "char") {
+								tmp->right->data = new Token("char");
+								tmp_vars[i]->data_type = Char;
 
-									signature.push_back((Variable(tmp_vars[i]->value, Char)));
-								}
-								else if (data_type->value == "double") {
-									tmp->right->data = new Token("double");
-									tmp_vars[i]->data_type = Double;
+								signature.push_back((Variable(tmp_vars[i]->value, Char)));
+							}
+							else if (data_type->value == "double") {
+								tmp->right->data = new Token("double");
+								tmp_vars[i]->data_type = Double;
 
-									signature.push_back((Variable(tmp_vars[i]->value, Double)));
-								}
-								else if (data_type->value == "string") {
-									tmp->right->data = new Token("string");
-									tmp_vars[i]->data_type = String;
+								signature.push_back((Variable(tmp_vars[i]->value, Double)));
+							}
+							else if (data_type->value == "string") {
+								tmp->right->data = new Token("string");
+								tmp_vars[i]->data_type = String;
 
-									signature.push_back((Variable(tmp_vars[i]->value, String)));
-								}
-
-								tmp_vars[i]->modifier = current_modifier;
-
-								if (global)
-									global_env->put(tmp_vars[i]);
-								else
-									current_env->put(tmp_vars[i]);
-
-								Node* t = new Node();
-								if (tmp->left != nullptr) {
-									t = tmp->left;
-									while (t->next != nullptr)
-										t = t->next;
-
-									t->next = new Node();
-									t->next->data = tmp_vars[i];
-								}			
-								else {
-									tmp->left = new Node();
-									tmp->left->data = tmp_vars[i];
-								}
-									
+								signature.push_back((Variable(tmp_vars[i]->value, String)));
 							}
 
+							tmp_vars[i]->modifier = current_modifier;
+
+							if (global)
+								global_env->put(tmp_vars[i]);
+							else
+								current_env->put(tmp_vars[i]);
+
 							Node* t = new Node();
-							if (variables->left != nullptr) {
-								t = variables->left;
+							if (tmp->left != nullptr) {
+								t = tmp->left;
 								while (t->next != nullptr)
 									t = t->next;
 
-								t->next = tmp;
-							}
+								t->next = new Node();
+								t->next->data = tmp_vars[i];
+							}			
 							else {
-								variables->left = new Node();
-								variables->left = tmp;
-							}							
+								tmp->left = new Node();
+								tmp->left->data = tmp_vars[i];
+							}									
+						}
 
-							new_vars = true;
+						Node* t = new Node();
+						if (variables->left != nullptr) {
+							t = variables->left;
+							while (t->next != nullptr)
+								t = t->next;
 
-							tmp_vars.clear();
-							continue;
-						//}
+							t->next = tmp;
+						}
+						else {
+							variables->left = new Node();
+							variables->left = tmp;
+						}							
+
+						new_vars = true;
+
+						tmp_vars.clear();
+						continue;
 					}
 				}
 				else
