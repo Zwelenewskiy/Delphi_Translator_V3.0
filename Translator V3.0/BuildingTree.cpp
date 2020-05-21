@@ -61,8 +61,7 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end)
 			postfix.push_back(operation_stack.top());
 			operation_stack.pop();
 		}
-	}
-	
+	}	
 }
 
 Node* BuildingTree::build_tree()//функция для построения дерева

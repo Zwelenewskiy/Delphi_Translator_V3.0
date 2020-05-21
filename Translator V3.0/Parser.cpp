@@ -123,6 +123,8 @@ Node* Parser::parse_expr()
 				return false;
 
 			if (current_token->value == ".") {
+				builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
+
 				if (tmp->data_type == UserDataType) {
 					for (Token* token : user_datatypes) {
 						if (token->value == tmp->parent->value) {
@@ -142,7 +144,6 @@ Node* Parser::parse_expr()
 			if ((current_token->type == AriphmethicalOperator)
 				|| (current_token->type == AriphmethicalOperator)) 
 			{
-				builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
 				continue;
 			}
 			
@@ -245,6 +246,7 @@ Node* Parser::parse_expr()
 				match(current_token);
 
 				if (current_token->value == ":=") {
+					builder_tree->infix_to_postfix(new Token(":="), AriphmethicalExpr);
 					match(current_token);
 					continue;
 				}
@@ -285,6 +287,8 @@ Node* Parser::parse_expr()
 			continue;
 		}
 		else if (current_token->type == AriphmethicalOperator) {
+			builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
+
 			if (!match(AriphmethicalOperator)) {
 				ShowError("EXPECTED ARIPHMETHICAL OPERTATOR BUT" + current_token->type);
 				return false;

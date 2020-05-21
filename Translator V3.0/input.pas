@@ -21,6 +21,8 @@ type
 
 var
 	t: Test;
+	a, b: integer;
+	c, d: boolean;
 begin	
-	t.m := 2;
+	a:= b + 2 * a;
 end.
