@@ -12,6 +12,9 @@ bool Env::check_signature(Token * token_1, Token * token_2)
 		return false;
 	else
 	{
+		if (token_1->signature.size() == 0)
+			return true;
+
 		for (size_t i = 0; i < token_1->signature.size(); i++)
 		{
 			if (token_1->signature[i].data_type == token_2->signature[i].data_type)
@@ -22,7 +25,7 @@ bool Env::check_signature(Token * token_1, Token * token_2)
 	}
 }
 
-//false, если не найдено ни одной подходящей подпрограммы
+//false, если не найдено подходящей подпрограммы
 //true, если найдена подходящая подпрограмма
 bool Env::check_overloads(Token* token, vector<Variable> signature, Env * env)
 {

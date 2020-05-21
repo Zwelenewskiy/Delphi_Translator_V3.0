@@ -59,7 +59,7 @@ void Parser::Parse(string path, Node*& tree)
 	}
 	else if (current_token->value == "var") {
 		current_modifier = Public;
-		tree = parse_var();
+		tree = parse_var(true);
 	}
 	else if (current_token->value != "begin") {
 		tree = false;
@@ -126,10 +126,8 @@ Node* Parser::parse_expr()
 			save_state();
 
 			match(current_token);
-			if (current_token->value == ".") {
-				//builder_tree->infix_to_postfix(tmp, AriphmethicalExpr, false, true, false);
+			if (current_token->value == ".") 
 				start_sequence = true;
-			}
 			else
 				builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
 
@@ -488,6 +486,8 @@ Node* Parser::parse_bool_expr()
 Node* Parser::parse_call(Token* subprogram_token)
 {
 	Node* node = new Node();
+	node->data = new Token("Call");
+
 	Token* tmp = current_token;
 	if (!match(Identificator))
 		return false;
@@ -496,7 +496,9 @@ Node* Parser::parse_call(Token* subprogram_token)
 		return false;
 
 	vector<Variable> signature;
-	if (!parse_call_param_list(signature)) {
+	node->left = parse_call_param_list(signature);
+
+	if (!node->left) {
 		ShowError("BAD SIGNATURE PARSING");
 		return false;
 	}
@@ -508,12 +510,11 @@ Node* Parser::parse_call(Token* subprogram_token)
 		}
 	}
 	else {
-		if (!global_env->check_overloads(subprogram_token, signature, subprogram_token->parent->members)) {
+		if (global_env->check_overloads(subprogram_token, signature, subprogram_token->parent->members)) {
 			ShowError("PARAMETERS DON'T MATCH THE SIGNATURE: " + tmp->value);
 			return false;
 		}
 	}
-
 
 	if (!match(new Token(")")))
 		return false;
@@ -524,6 +525,8 @@ Node* Parser::parse_call(Token* subprogram_token)
 		ShowError("EXPECTED ; OR ARIPHMETHICAL OPERATOR");
 		return false;
 	}
+
+	return node;
 }
 
 Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
@@ -1222,7 +1225,7 @@ Node* Parser::stmt()
 	else if (current_token->value == "var") {
 		current_modifier = Public;
 
-		node = parse_var();
+		node = parse_var(true);
 		if (!node) {
 			ShowError("BAD VARIABLE DECLARATION PARSING");
 			return false;
