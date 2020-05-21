@@ -102,6 +102,8 @@ Node* Parser::parse_expr()
 	Token* parent = nullptr;
 	Node* node = new Node();
 
+	bool start_sequence = false;
+
 	BuildingTree* builder_tree = new BuildingTree();
 	while ((current_token->value != ";") && (current_token->value != "else")) {
 
@@ -114,16 +116,36 @@ Node* Parser::parse_expr()
 				if (!global_env->get(tmp))
 					global_env->get(tmp, struct_env);
 			}
-			else
-				global_env->get(tmp);
+			else {
+				if (!global_env->get(tmp) && !current_env->get(tmp)) {
+					ShowError("TOKEN NOT DEFINED: " + tmp->value);
+					return false;
+				}
+			}
 
-			builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
+			save_state();
+
+			match(current_token);
+			if (current_token->value == ".") {
+				//builder_tree->infix_to_postfix(tmp, AriphmethicalExpr, false, true, false);
+				start_sequence = true;
+			}
+			else
+				builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
+
+			load_state();
 
 			if (!match(Identificator))
 				return false;
 
 			if (current_token->value == ".") {
-				builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
+				if (start_sequence) {
+					builder_tree->infix_to_postfix(tmp, AriphmethicalExpr, false, true, false);
+					start_sequence = false;
+				}
+				else {
+					builder_tree->infix_to_postfix(tmp, AriphmethicalExpr, false, false, true);
+				}
 
 				if (tmp->data_type == UserDataType) {
 					for (Token* token : user_datatypes) {
@@ -215,6 +237,8 @@ Node* Parser::parse_expr()
 				return false;
 			}
 
+			//builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
+			builder_tree->infix_to_postfix(current_token, AriphmethicalExpr, false, false, true);
 			CheckTokenType type = UndefinedCheckTokenType;			
 			
 			for (Token* var : parent->members->table) {
@@ -264,10 +288,12 @@ Node* Parser::parse_expr()
 				else if (current_token->value == ";") {
 					return node;
 				}
-				else {
+				/*else {
 					ShowError("EXPECTED PROCEURE, FUNCTION OR VARIABLE BUT " + current_token->type);
 					return false;
-				}
+				}*/
+				else
+					continue;
 			}
 		}
 		else if (current_token->type == LogicalOperator) {

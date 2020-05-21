@@ -293,9 +293,12 @@ Token::Token(){
 	check_type = UndefinedCheckTokenType;
 	data_type = UndefinedDataType;
 	modifier = Public;
+
+	sequence_position = -1;
 }
 
 Token::Token(string val)
 {
 	value = val;
+	sequence_position = -1;
 }

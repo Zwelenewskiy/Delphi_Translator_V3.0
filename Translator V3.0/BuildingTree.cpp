@@ -1,7 +1,32 @@
 #include "BuildingTree.h"
 
-void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end)
+void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool start_sequence, bool add_in_sequence_array)
 {
+	if(token)
+		token = new Token(token->value);
+
+	if (start_sequence) {
+		sequence_array.push_back(nullptr);
+
+		sequence_array_position = sequence_array.size() - 1;
+		token->sequence_position = sequence_array_position;
+	}
+	else if(add_in_sequence_array) {
+		Token* tmp = sequence_array[sequence_array_position];
+
+		if (tmp) { 
+			while (tmp->next)
+				tmp = tmp->next;
+
+			tmp->next = token;
+		}
+		else {
+			sequence_array[sequence_array_position] = token;
+		}
+
+		return;
+	}
+
 	if (!end) {
 		//определяем приоритет операций
 		if (type == BooleanExpr)// для булевских выражений
@@ -79,6 +104,27 @@ Node* BuildingTree::build_tree()//функция для построения дерева
 		if ((Match_Reg(postfix[i]->value, DIGIT) || Match_Reg(postfix[i]->value, IDENTIFICATOR))
 			&& (postfix[i]->type != AriphmethicalOperator) && (postfix[i]->type != LogicalOperator))
 		{
+			if (postfix[i]->sequence_position != -1) {
+				Token* tmp_token = sequence_array[postfix[i]->sequence_position];
+				while (tmp_token) {
+					Node* t = new Node();
+					t->data = tmp_token;
+
+					Node* tmp_node = tmp->sequence;
+					if (tmp_node) {
+						while (tmp_node->next)
+							tmp_node = tmp_node->next;
+
+						tmp_node->next = t;
+					}
+					else {
+						tmp->sequence = t;
+					}
+
+					tmp_token = tmp_token->next;
+				}
+			}			
+
 			if (!tmp_stack.empty())
 				tmp->next = tmp_stack.top();
 			tmp_stack.push(tmp);

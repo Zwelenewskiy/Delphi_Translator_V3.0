@@ -71,6 +71,9 @@ public:
 	Modifier modifier;
 	Token* parent;
 
+	Token* next;
+	int  sequence_position;
+
 	int line;
 
 	Token();
@@ -85,6 +88,7 @@ public:
 	Node* left;
 	Node* right;
 	Node* next;//для элемента block
+	Node* sequence;//для последовательности обращения к полям структур
 
 	Node* condition;//для булевого выражения
 
@@ -94,6 +98,7 @@ public:
 		right = nullptr;
 		condition = nullptr;
 		next = nullptr;
+		sequence = nullptr;
 	}
 };
 

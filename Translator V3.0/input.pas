@@ -1,12 +1,21 @@
 Program  prog;
 
 type
+  Test2 = class
+	uuu: integer;
+  end;
+  
+  Test1 = class
+	ttt: Test2;
+  end;
+
   Test = record
 	private
 		c: char;
 	
 	public
-		a: integer;
+		a, b: integer;
+		lll: Test1;
 		
 	function Foo(): char;
 	begin
@@ -20,9 +29,9 @@ type
   end;
 
 var
-	t: Test;
+	t, k: Test;
 	a, b: integer;
 	c, d: boolean;
 begin	
-	a:= b + 2 * a;
+	t.a:= k.lll.ttt.uuu * 2;
 end.
