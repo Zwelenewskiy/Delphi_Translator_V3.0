@@ -69,7 +69,7 @@ bool Env::get(Token*& token, Env* env)
 		current_table = table;
 	else
 		current_table = env->table;
-
+	
 	for (int i = 0; i < current_table.size(); i++) {
 		if (to_lower(current_table[i]->value) == to_lower(token->value)) {
 			if ((current_table[i]->check_type == Procedure)
@@ -83,7 +83,7 @@ bool Env::get(Token*& token, Env* env)
 			else {
 				token = current_table[i];
 				return true;
-			}					
+			}
 		}
 	}
 

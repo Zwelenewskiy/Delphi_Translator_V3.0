@@ -22,7 +22,8 @@ void Parser::Parse(string path, Node*& tree)
 		while ((current_token->value != "function")
 			&& (current_token->value != "procedure")
 			&& (current_token->value != "var")
-			&& (current_token->value != "begin"))
+			&& (current_token->value != "begin")
+			&& tree)
 		{	
 
 			if (first) {
@@ -108,7 +109,13 @@ Node* Parser::parse_expr()
 
 		tmp = current_token;
 		if (current_token->type == Identificator) {
-			global_env->get(tmp);
+
+			if (struct_env != nullptr) {
+				if (!global_env->get(tmp))
+					global_env->get(tmp, struct_env);
+			}
+			else
+				global_env->get(tmp);
 
 			builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
 
@@ -278,8 +285,6 @@ Node* Parser::parse_expr()
 			continue;
 		}
 		else if (current_token->type == AriphmethicalOperator) {
-			//builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
-
 			if (!match(AriphmethicalOperator)) {
 				ShowError("EXPECTED ARIPHMETHICAL OPERTATOR BUT" + current_token->type);
 				return false;
@@ -783,6 +788,9 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 									else
 										current_env->put(tmp_vars[i]);
 
+									if(in_struct)
+										struct_env->put(tmp_vars[i]);
+
 									Node* t = new Node();
 									if (tmp->left != nullptr) {
 										t = tmp->left;
@@ -872,6 +880,9 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 								global_env->put(tmp_vars[i]);
 							else
 								current_env->put(tmp_vars[i]);
+
+							if (in_struct && struct_env)
+								struct_env->put(tmp_vars[i]);
 
 							Node* t = new Node();
 							if (tmp->left != nullptr) {
@@ -1037,7 +1048,10 @@ Node* Parser::parse_struct()
 	}
 	else {
 		tmp->check_type = type;
-		tmp->members = current_env;
+		//tmp->members = current_env;
+		tmp->members = struct_env;
+
+		struct_env = nullptr;
 
 		global_env->put(tmp);
 		user_datatypes.push_back(tmp);
