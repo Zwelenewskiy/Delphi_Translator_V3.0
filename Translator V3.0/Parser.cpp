@@ -788,7 +788,7 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 									else
 										current_env->put(tmp_vars[i]);
 
-									if(in_struct)
+									if (in_struct && struct_env && !parse_signature)
 										struct_env->put(tmp_vars[i]);
 
 									Node* t = new Node();
@@ -881,7 +881,7 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 							else
 								current_env->put(tmp_vars[i]);
 
-							if (in_struct && struct_env)
+							if (in_struct && struct_env && !parse_signature)
 								struct_env->put(tmp_vars[i]);
 
 							Node* t = new Node();
