@@ -11,7 +11,8 @@ private:
 	stack<Token*> operation_stack;
 	stack <Node*> tmp_stack;
 	map<string, int> prec;//старшинство операций
-	vector<Token*> postfix;
+	//vector<Token*> postfix;
+	vector<Node*> postfix;
 
 	vector<Token*> sequence_array;
 	int sequence_array_position;

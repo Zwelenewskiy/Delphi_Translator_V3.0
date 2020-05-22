@@ -52,7 +52,8 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 		if ((Match_Reg(token->value, DIGIT) || Match_Reg(token->value, IDENTIFICATOR))
 			&& (token->type != AriphmethicalOperator) && (token->type != LogicalOperator))
 		{
-			postfix.push_back(token);
+			//postfix.push_back(token);
+			postfix.push_back(new Node(token));
 		}
 		else if (token->value == "(")
 		{
@@ -64,7 +65,8 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 			operation_stack.pop();
 			while (top_token->value != "(")
 			{
-				postfix.push_back(top_token);
+				//postfix.push_back(top_token);
+				postfix.push_back(new Node(top_token));
 				top_token = operation_stack.top();
 				operation_stack.pop();
 			}
@@ -73,7 +75,8 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 		{
 			while ((!operation_stack.empty()) && (prec[operation_stack.top()->value] >= prec[token->value]))
 			{
-				postfix.push_back(operation_stack.top());
+				//postfix.push_back(operation_stack.top());
+				postfix.push_back(new Node(operation_stack.top()));
 				operation_stack.pop();
 			}
 
@@ -83,7 +86,8 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 	else {
 		while (!operation_stack.empty())
 		{
-			postfix.push_back(operation_stack.top());
+			//postfix.push_back(operation_stack.top());
+			postfix.push_back(new Node(operation_stack.top()));
 			operation_stack.pop();
 		}
 	}	
@@ -99,13 +103,14 @@ Node* BuildingTree::build_tree()//функция для построения дерева
 	for (int i = 0; i < postfix.size(); i++)
 	{
 		Node* tmp = new Node();
-		tmp->data = postfix[i];
+		//tmp->data = postfix[i];
+		tmp = postfix[i];
 
-		if ((Match_Reg(postfix[i]->value, DIGIT) || Match_Reg(postfix[i]->value, IDENTIFICATOR))
-			&& (postfix[i]->type != AriphmethicalOperator) && (postfix[i]->type != LogicalOperator))
+		if ((Match_Reg(postfix[i]->data->value, DIGIT) || Match_Reg(postfix[i]->data->value, IDENTIFICATOR))
+			&& (postfix[i]->data->type != AriphmethicalOperator) && (postfix[i]->data->type != LogicalOperator))
 		{
-			if (postfix[i]->sequence_position != -1) {
-				Token* tmp_token = sequence_array[postfix[i]->sequence_position];
+			if (postfix[i]->data->sequence_position != -1) {
+				Token* tmp_token = sequence_array[postfix[i]->data->sequence_position];
 				while (tmp_token) {
 					Node* t = new Node();
 					t->data = tmp_token;
@@ -133,7 +138,7 @@ Node* BuildingTree::build_tree()//функция для построения дерева
 		{
 			tmp->right = tmp_stack.top();
 
-			if (postfix[i]->value != "not") {
+			if (postfix[i]->data->value != "not") {
 				tmp->left = tmp_stack.top()->next;
 				tmp->next = tmp_stack.top()->next->next;
 			}

@@ -1,7 +1,7 @@
 #include "Parser.h"
 
 void Parser::Parse(string path, Node*& tree)
-{ 
+ { 
 	lexer = new Lexer(path);
 	current_token = lexer->GetToken();
 	bool correct = true;
@@ -173,8 +173,7 @@ Node* Parser::parse_expr()
 					return false;
 				}
 				else {
-					builder_tree->infix_to_postfix(nullptr, AriphmethicalExpr, true);					
-
+					builder_tree->infix_to_postfix(nullptr, AriphmethicalExpr, true);		
 					return builder_tree->build_tree();
 				}
 			}
@@ -284,7 +283,9 @@ Node* Parser::parse_expr()
 					}
 				}
 				else if (current_token->value == ";") {
-					return node;
+					//return node;
+					builder_tree->infix_to_postfix(nullptr, AriphmethicalExpr, true);
+					return builder_tree->build_tree();
 				}
 				/*else {
 					ShowError("EXPECTED PROCEURE, FUNCTION OR VARIABLE BUT " + current_token->type);
@@ -318,7 +319,20 @@ Node* Parser::parse_expr()
 				return false;
 			}
 
-			builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
+			//uilder_tree->infix_to_postfix(current_token, AriphmethicalExpr);////////////////////////////////
+
+			save_state();
+
+			tmp = current_token;
+			match(current_token);
+			if (current_token->value == ".")
+				//start_sequence = true;
+				builder_tree->infix_to_postfix(tmp, AriphmethicalExpr, false, true, false);
+			else
+				builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
+
+			load_state();
+
 			if (!match(Identificator, false)) {
 				if (!match(Literal)) {
 					return false;

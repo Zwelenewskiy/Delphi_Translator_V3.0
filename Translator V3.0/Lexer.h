@@ -100,6 +100,15 @@ public:
 		next = nullptr;
 		sequence = nullptr;
 	}
+
+	Node(Token* token) {
+		data = token; 
+		left = nullptr;
+		right = nullptr;
+		condition = nullptr;
+		next = nullptr;
+		sequence = nullptr;
+	}
 };
 
 class Lexer

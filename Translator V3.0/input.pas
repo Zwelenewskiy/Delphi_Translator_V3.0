@@ -33,5 +33,5 @@ var
 	a, b: integer;
 	c, d: boolean;
 begin	
-	t.Foo();
+	a:= t.lll * t.lll.ttt.uuu;
 end.
