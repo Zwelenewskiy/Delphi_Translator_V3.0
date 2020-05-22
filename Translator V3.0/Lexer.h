@@ -89,6 +89,7 @@ public:
 	Node* right;
 	Node* next;//для элемента block
 	Node* sequence;//для последовательности обращения к полям структур
+	string name;
 
 	Node* condition;//для булевого выражения
 
@@ -99,6 +100,7 @@ public:
 		condition = nullptr;
 		next = nullptr;
 		sequence = nullptr;
+		name = "";
 	}
 
 	Node(Token* token) {
@@ -108,6 +110,7 @@ public:
 		condition = nullptr;
 		next = nullptr;
 		sequence = nullptr;
+		name = "";
 	}
 };
 

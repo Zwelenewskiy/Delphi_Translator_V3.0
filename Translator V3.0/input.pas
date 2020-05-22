@@ -33,5 +33,5 @@ var
 	a, b: integer;
 	c, d: boolean;
 begin	
-	a:= t.lll * t.lll.ttt.uuu;
+	a:= k * (2 + b);	
 end.

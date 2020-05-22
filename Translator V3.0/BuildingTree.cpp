@@ -1,6 +1,6 @@
 #include "BuildingTree.h"
 
-void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool start_sequence, bool add_in_sequence_array)
+void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool start_sequence, bool add_in_sequence_array, Node* node)
 {
 	if(token)
 		token = new Token(token->value);
@@ -12,16 +12,22 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 		token->sequence_position = sequence_array_position;
 	}
 	else if(add_in_sequence_array) {
-		Token* tmp = sequence_array[sequence_array_position];
+		Node* tmp = sequence_array[sequence_array_position];
 
 		if (tmp) { 
 			while (tmp->next)
 				tmp = tmp->next;
 
-			tmp->next = token;
+			if (token)
+				tmp->next = new Node(token);
+			else
+				tmp->next = node;
 		}
 		else {
-			sequence_array[sequence_array_position] = token;
+			if(token)
+				sequence_array[sequence_array_position] = new Node(token);
+			else
+				sequence_array[sequence_array_position] = node;
 		}
 
 		return;
@@ -110,10 +116,11 @@ Node* BuildingTree::build_tree()//функция для построения дерева
 			&& (postfix[i]->data->type != AriphmethicalOperator) && (postfix[i]->data->type != LogicalOperator))
 		{
 			if (postfix[i]->data->sequence_position != -1) {
-				Token* tmp_token = sequence_array[postfix[i]->data->sequence_position];
+				Node* tmp_token = sequence_array[postfix[i]->data->sequence_position];
 				while (tmp_token) {
 					Node* t = new Node();
-					t->data = tmp_token;
+					t->data = tmp_token->data;
+					t->name = tmp_token->name;
 
 					Node* tmp_node = tmp->sequence;
 					if (tmp_node) {

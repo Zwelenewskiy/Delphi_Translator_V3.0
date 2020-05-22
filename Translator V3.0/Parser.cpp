@@ -128,13 +128,24 @@ Node* Parser::parse_expr()
 			match(current_token);
 			if (current_token->value == ".") 
 				start_sequence = true;
-			else
+			else {
+				load_state();
 				builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
+			}
 
-			load_state();
+			if (!match(Identificator, false)) 				
+					return false;
 
-			if (!match(Identificator))
-				return false;
+			if (match(new Token(")"), false)) {
+				builder_tree->infix_to_postfix(new Token(")"), AriphmethicalExpr);
+
+				if (current_token->value == ";") {
+					builder_tree->infix_to_postfix(nullptr, AriphmethicalExpr, true);
+					return builder_tree->build_tree();
+				}
+				else
+					continue;
+			}
 
 			if (current_token->value == ".") {
 				if (start_sequence) {
@@ -198,13 +209,13 @@ Node* Parser::parse_expr()
 				if ((current_token->check_type == Function)
 					|| (current_token->check_type == Function)) 
 				{
-					builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
-
-					node->left = parse_call(current_token);
+					Node* tmp_node = parse_call(current_token);
 					if (!node->left) {
 						ShowError("EXPECTED FUNCTION OR PROCEDURE");
 						return false;
 					}
+					else
+						builder_tree->infix_to_postfix(nullptr, AriphmethicalExpr, tmp_node);
 				}
 			}
 
@@ -235,7 +246,7 @@ Node* Parser::parse_expr()
 			}
 
 			//builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
-			builder_tree->infix_to_postfix(current_token, AriphmethicalExpr, false, false, true);
+			//builder_tree->infix_to_postfix(current_token, AriphmethicalExpr, false, false, true);
 			CheckTokenType type = UndefinedCheckTokenType;			
 			
 			for (Token* var : parent->members->table) {
@@ -257,12 +268,18 @@ Node* Parser::parse_expr()
 				return false;
 			}
 			else if ((type == Procedure) || (type == Function)) {
-				if (!parse_call(current_token)) {
+				Node* tmp_node = parse_call(current_token);
+
+				if (!tmp) {
 					ShowError("EXPECTED PROCEDURE OR FUNCTION");
 					return false;
 				}
+				else
+					builder_tree->infix_to_postfix(nullptr, AriphmethicalExpr, false, false, true, tmp_node);
 			}
 			else if (type == Var) {
+				builder_tree->infix_to_postfix(current_token, AriphmethicalExpr, false, false, true);
+
 				tmp = current_token;
 				match(current_token);
 
@@ -328,10 +345,15 @@ Node* Parser::parse_expr()
 			if (current_token->value == ".")
 				//start_sequence = true;
 				builder_tree->infix_to_postfix(tmp, AriphmethicalExpr, false, true, false);
-			else
-				builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
+			else {
+				load_state();
 
-			load_state();
+				if(current_token->value != "(")
+				builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
+			}
+
+			if (current_token->value == "(")
+				continue;
 
 			if (!match(Identificator, false)) {
 				if (!match(Literal)) {
@@ -385,22 +407,27 @@ Node* Parser::parse_expr()
 				return false;
 
 			save_state();
-			if (!match(Identificator, false)) {
-				if (!match(Literal, false))
+			if (current_token->type != Identificator) {
+				if (current_token->type != Literal)
 					return false;
+				else
+					continue;
 			}
 			else {
 				load_state();
-				builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
+				//builder_tree->infix_to_postfix(current_token, AriphmethicalExpr);
 
 				if (!current_env->get(current_token) && !global_env->get(current_token)) {
 					ShowError("TOKEN NOT DEFINED: " + current_token->value);
 					return false;
 				}
 
-				node->left = parse_call(current_token);
-				if (current_token->check_type == Function) {
+				Node* tmp_node = parse_call(current_token);
 
+				if(tmp_node)
+					builder_tree->infix_to_postfix(nullptr, AriphmethicalExpr, tmp_node);
+
+				if (current_token->check_type == Function) {
 					if (!node->left) {
 						ShowError("EXPECTED LOGICAL OPERTATOR BUT" + current_token->type);
 						return false;
@@ -501,6 +528,7 @@ Node* Parser::parse_call(Token* subprogram_token)
 {
 	Node* node = new Node();
 	node->data = new Token("Call");
+	node->name = subprogram_token->value;
 
 	Token* tmp = current_token;
 	if (!match(Identificator))
@@ -512,7 +540,7 @@ Node* Parser::parse_call(Token* subprogram_token)
 	vector<Variable> signature;
 	node->left = parse_call_param_list(signature);
 
-	if (!node->left) {
+	if (!node->left) { 
 		ShowError("BAD SIGNATURE PARSING");
 		return false;
 	}
@@ -676,15 +704,22 @@ Node* Parser::parse_call_param_list(vector<Variable>& signature){
 			}
 		}
 
-		if (current_token->value == ")")
+		if (current_token->value == ")") {
+			if (signature.size() > 0) {
+				node = new Node(new Token((signature[0].name)));
+				for (size_t i = 1; i < signature.size(); i++)
+					node->next = new Node(new Token((signature[i].name)));
+			}
+
 			return node;
+		}
 
 		if (!match(new Token(","), false)) {
 			return false;
 		}
 		else
 			continue;
-	}
+	}	
 }
 
 Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variable>& signature, bool parse_signature)
