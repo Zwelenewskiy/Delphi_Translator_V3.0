@@ -594,6 +594,7 @@ Node* Parser::parse_subprogramm(CheckTokenType type, bool global)
 		return false;
 	}
 
+	node->name = current_token->value;
 	if (!match(Identificator))
 		return false;
 
@@ -1043,13 +1044,6 @@ Node* Parser::parse_struct()
 	else
 		type = Record;
 
-	/*if (current_token->type == Identificator) {
-		if (!parse_var(false, true)) {
-			ShowError("BAD VARIABLE  DECLARATION PARSING");
-			return false;
-		}
-	}*/
-
 	if (to_lower(current_token->value) == "private") {
 		current_modifier = Private;
 		match(new Token(current_token->value));
@@ -1109,10 +1103,10 @@ Node* Parser::parse_struct()
 		}
 
 		Node* t = new Node();
-		if (node->right == nullptr)
-			node->right = tmp;
+		if (node->left == nullptr)
+			node->left = tmp;
 		else {
-			t = node->right;
+			t = node->left;
 			while (t->next != nullptr)
 				t = t->next;
 
