@@ -36,19 +36,13 @@ void Parser::Parse(string path, Node*& tree)
 				if(!tree->next)
 					tree->next = parse_struct();
 				else {
+					tmp = tree->next;
 					while (tmp->next)
 						tmp = tmp->next;
 
 					tmp->next = parse_struct();
 				}				
 			}
-
-			/*tree = parse_struct();
-			if (!tree) {
-				ShowError("EXPECTED TYPE");
-				correct = false;
-				break;
-			}*/
 		}
 	}
 	else if (to_lower(current_token->value) == "function") {
@@ -129,9 +123,10 @@ Node* Parser::parse_expr()
 			if (current_token->value == ".") 
 				start_sequence = true;
 			else {
-				load_state();
 				builder_tree->infix_to_postfix(tmp, AriphmethicalExpr);
 			}
+
+			load_state();
 
 			if (!match(Identificator, false)) 				
 					return false;
@@ -814,7 +809,7 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 			}
 			else {
 				if (!current_env->get(current_token)) {
-					for (Token* t : tmp_vars) {
+					for (Token* t: tmp_vars) {
 						if (t->value == current_token->value) {
 							ShowError("TOKEN ALREADY EXIST: " + current_token->value);
 							return false;
@@ -836,7 +831,7 @@ Node* Parser::parse_var(bool global, bool in_struct, bool new_env, vector<Variab
 			if (!match(new Token(","), false)) {
 				Node* tmp = new Node();
 				tmp->data = current_token;
-				if (match(new Token(":"))) {
+				if (match(new Token(":"))) {					
 					Token* data_type = current_token;
 
 					if (!match(TypeData, false)) {
@@ -1021,6 +1016,7 @@ Node* Parser::parse_struct()
 	struct_env = new Env();
 
 	Token* tmp = current_token;
+	node->name = tmp->value;
 	current_struct = current_token;
 	if (!match(Identificator)) {
 		return false;

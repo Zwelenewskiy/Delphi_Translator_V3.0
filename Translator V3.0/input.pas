@@ -33,5 +33,5 @@ var
 	a, b: integer;
 	c, d: boolean;
 begin	
-	a:= k * (2 + b);	
+	a:= t.Foo('b')* (2 + d);	
 end.

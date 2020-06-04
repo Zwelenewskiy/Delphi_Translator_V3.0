@@ -58,7 +58,6 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 		if ((Match_Reg(token->value, DIGIT) || Match_Reg(token->value, IDENTIFICATOR))
 			&& (token->type != AriphmethicalOperator) && (token->type != LogicalOperator))
 		{
-			//postfix.push_back(token);
 			postfix.push_back(new Node(token));
 		}
 		else if (token->value == "(")
@@ -71,7 +70,6 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 			operation_stack.pop();
 			while (top_token->value != "(")
 			{
-				//postfix.push_back(top_token);
 				postfix.push_back(new Node(top_token));
 				top_token = operation_stack.top();
 				operation_stack.pop();
@@ -81,7 +79,6 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 		{
 			while ((!operation_stack.empty()) && (prec[operation_stack.top()->value] >= prec[token->value]))
 			{
-				//postfix.push_back(operation_stack.top());
 				postfix.push_back(new Node(operation_stack.top()));
 				operation_stack.pop();
 			}
@@ -92,7 +89,6 @@ void BuildingTree::infix_to_postfix(Token* token, TreeType type, bool end, bool 
 	else {
 		while (!operation_stack.empty())
 		{
-			//postfix.push_back(operation_stack.top());
 			postfix.push_back(new Node(operation_stack.top()));
 			operation_stack.pop();
 		}
